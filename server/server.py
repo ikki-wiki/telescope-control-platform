@@ -22,6 +22,16 @@ coordinates = {'RA': 'Sr', 'DEC': 'Sd', 'MOVE': 'MS'}
 patternRA = r'^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$'
 patternDEC = r'^[+-]\d{2}\*\d{2}:\d{2}$'
 
+def convert_dec_to_lx200(dec):
+    # If already using *, just return
+    if '*' in dec:
+        return dec
+    # If using :, convert first : to *
+    parts = dec.split(':', 1)
+    if len(parts) == 2:
+        return parts[0] + '*' + parts[1]
+    return dec  # fallback
+
 @app.route("/api/movement", methods=["POST"])
 def api_movement():
     data = request.json
@@ -63,13 +73,40 @@ def api_time():
 @app.route("/api/coordinates", methods=["POST"])
 def api_coordinates():
     data = request.json
-    ra, dec = data.get("RA"), data.get("DEC")
-    if re.match(patternRA, ra) and re.match(patternDEC, dec):
+    ra, dec = data.get("ra"), data.get("dec")
+
+    lx200_dec = convert_dec_to_lx200(dec)
+    print(f"Received RA: {ra}, DEC: {dec}")
+    print(f"Converted DEC to LX200 format: {lx200_dec}")
+    
+    if not ra or not dec:
+        return jsonify({"status": "error", "message": "RA and DEC must be provided."}), 400
+
+    if re.match(patternRA, ra) and re.match(patternDEC, lx200_dec):
         r = telescope.send_command_receive(coordinates['RA'] + ra)
-        d = telescope.send_command_receive(coordinates['DEC'] + dec)
+        d = telescope.send_command_receive(coordinates['DEC'] + lx200_dec)
         m = telescope.send_command_receive(coordinates['MOVE'])
+
         return jsonify({"status": "success", "RA": r, "DEC": d, "MOVE": m})
-    return jsonify({"status": "error", "message": "Invalid RA or DEC format"}), 400
+
+    return jsonify({
+        "status": "error",
+        "message": f"Invalid RA/DEC format. Received RA: {ra}, DEC: {dec}"
+    }), 400
+
+
+@app.route("/api/currentPosition", methods=["GET"])
+def api_current_position():
+    try:
+        ra = telescope.send_command_receive(information['Right_ascension'])
+        dec = telescope.send_command_receive(information['Declination'])
+        position = {
+            "ra": ra.strip(),
+            "dec": dec.strip()
+        }
+        return jsonify({"status": "success", "position": position})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=7123)

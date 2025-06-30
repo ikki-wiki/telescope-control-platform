@@ -1,27 +1,18 @@
 import { useState } from 'react';
+import { setDate, setTime } from '../api/telescopeAPI';
 
 export default function Settings() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
 
-  const sendDate = async () => {
-    const res = await fetch('http://localhost:7123/api/setTime', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ command: 'date', value: date })
-    });
-    const data = await res.json();
-    alert(data.message);
+  const handleDate = async () => {
+    const res = await setDate(date);
+    alert(res.message);
   };
 
-  const sendTime = async () => {
-    const res = await fetch('http://localhost:7123/api/setTime', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ command: 'hour', value: time })
-    });
-    const data = await res.json();
-    alert(data.message);
+  const handleTime = async () => {
+    const res = await setTime(time);
+    alert(res.message);
   };
 
   return (
@@ -31,13 +22,13 @@ export default function Settings() {
       <div>
         <h2 className="font-semibold">Set Date</h2>
         <input className="border p-1 mr-2" placeholder="MM/DD/YY" value={date} onChange={e => setDate(e.target.value)} />
-        <button className="bg-blue-500 text-white px-4 py-1 rounded" onClick={sendDate}>Set Date</button>
+        <button className="bg-blue-500 text-white px-4 py-1 rounded" onClick={handleDate}>Set Date</button>
       </div>
 
       <div>
         <h2 className="font-semibold">Set Time</h2>
         <input className="border p-1 mr-2" placeholder="HH:MM:SS" value={time} onChange={e => setTime(e.target.value)} />
-        <button className="bg-blue-500 text-white px-4 py-1 rounded" onClick={sendTime}>Set Time</button>
+        <button className="bg-blue-500 text-white px-4 py-1 rounded" onClick={handleTime}>Set Time</button>
       </div>
     </div>
   );
