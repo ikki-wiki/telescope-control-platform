@@ -180,11 +180,34 @@ class IndiTelescopeController(BaseTelescopeController):
         # You could trigger alignment routines or return dummy success
         return {"status": "Alignment not implemented yet"}
 
-    def set_time(self, utc_datetime):
+    def get_telescope_time(self):
+        """Returns the current time of the telescope."""
+        time_prop = self.device.getText("TIME_UTC")
+        if not time_prop:
+            raise RuntimeError("TIME_UTC property not available on device")
+        return time_prop[0].getText()
+
+    def set_time(self, time_obj):
         """Sets telescope time (if supported)."""
         time_prop = self.device.getText("TIME_UTC")
         if not time_prop:
             raise RuntimeError("TIME_UTC property not available on device")
-
-        time_prop[0].setText(utc_datetime.strftime("%Y-%m-%dT%H:%M:%S"))
+        time_prop[0].setText(time_obj.strftime("%H:%M:%S"))
         self.client.sendNewText(time_prop)
+
+    def get_telescope_date(self):
+        """Returns the current date of the telescope."""
+        date_prop = self.device.getText("DATE_UTC")
+        if not date_prop:
+            raise RuntimeError("DATE_UTC property not available on device")
+
+        return date_prop[0].getText() if date_prop else None
+    
+    def set_date(self, date_datetime):
+        """Sets telescope date (if supported)."""
+        date_prop = self.device.getText("DATE_UTC")
+        if not date_prop:
+            raise RuntimeError("DATE_UTC property not available on device")
+
+        date_prop[0].setText(date_datetime.strftime("%Y-%m-%d"))
+        self.client.sendNewText(date_prop)

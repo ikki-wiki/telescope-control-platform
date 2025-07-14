@@ -114,14 +114,43 @@ def align():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/api/set_time", methods=["POST"])
+@app.route("/api/time", methods=["GET"])
+def get_time():
+    try:
+        current_time = controller.get_telescope_time()
+        return jsonify({'time': current_time})
+    except Exception as e:
+        print(f"Error fetching time: {e}")
+        return jsonify({'error': 'Failed to get time'}), 500
+
+@app.route("/api/time", methods=["POST"])
 def set_time():
     try:
         data = request.get_json()
-        utc_str = data["utc"]
-        utc_datetime = datetime.strptime(utc_str, "%Y-%m-%dT%H:%M:%S")
-        controller.set_time(utc_datetime)
+        time_str = data["time"]
+        time_obj = datetime.strptime(time_str, "%H:%M")
+        controller.set_time(time_obj)
         return jsonify({"status": "success", "message": "Time set"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/date", methods=["GET"])
+def get_date():
+    try:
+        current_date = controller.get_telescope_date()
+        return jsonify({'date': current_date})
+    except Exception as e:
+        print(f"Error fetching date: {e}")
+        return jsonify({'error': 'Failed to get date'}), 500
+
+@app.route("/api/date", methods=["POST"])
+def set_date():
+    try:
+        data = request.get_json()
+        date_str = data["date"]
+        date_datetime = datetime.strptime(date_str, "%Y-%m-%d")
+        controller.set_date(date_datetime)
+        return jsonify({"status": "success", "message": "Date set"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
