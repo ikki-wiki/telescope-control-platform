@@ -2,25 +2,38 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
 import logging
-
-from indi_controller import IndiTelescopeController  # Fix import: it was 'IndiController' before, assuming typo
+from indi_controller import IndiTelescopeController
 
 app = Flask(__name__)
 CORS(app)
 
+logging.basicConfig(level=logging.DEBUG)
+
 # Initialize and connect the INDI telescope controller
-controller = IndiTelescopeController()
+controller = IndiTelescopeController(host="localhost", port=7624)
+
 try:
     controller.connect()
 except Exception as e:
     logging.error(f"Failed to connect to INDI server: {e}")
     # Optionally, handle this more gracefully or exit
 
-@app.route("/")
+
+def hms_to_hours(hms):
+    h, m, s = map(float, hms.strip().split(':'))
+    return h + m/60 + s/3600
+
+def dms_to_degrees(dms):
+    sign = -1 if dms.strip().startswith('-') else 1
+    dms = dms.strip().lstrip('+-')
+    d, m, s = map(float, dms.split(':'))
+    return sign * (d + m/60 + s/3600)
+
+@app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Telescope control server is running"}), 200
 
-@app.route("/move/<direction>", methods=["POST"])
+@app.route("/api/move/<direction>", methods=["POST"])
 def move(direction):
     try:
         # Assuming a default rate; you could accept a JSON param for rate if you want
@@ -30,7 +43,7 @@ def move(direction):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/slew", methods=["POST"])
+@app.route("/api/slew", methods=["POST"])
 def slew():
     try:
         data = request.get_json()
@@ -41,7 +54,7 @@ def slew():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/abort", methods=["POST"])
+@app.route("/api/abort", methods=["POST"])
 def abort():
     try:
         controller.abort_slew()
@@ -49,7 +62,7 @@ def abort():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/sync", methods=["POST"])
+@app.route("/api/sync", methods=["POST"])
 def sync():
     try:
         data = request.get_json()
@@ -60,7 +73,7 @@ def sync():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/park", methods=["POST"])
+@app.route("/api/park", methods=["POST"])
 def park():
     try:
         controller.park()
@@ -68,7 +81,7 @@ def park():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/unpark", methods=["POST"])
+@app.route("/api/unpark", methods=["POST"])
 def unpark():
     try:
         controller.unpark()
@@ -76,7 +89,7 @@ def unpark():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/position", methods=["GET"])
+@app.route("/api/position", methods=["GET"])
 def position():
     try:
         pos = controller.get_current_position()
@@ -84,7 +97,7 @@ def position():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/info", methods=["GET"])
+@app.route("/api/info", methods=["GET"])
 def info():
     try:
         info = controller.get_info()
@@ -92,7 +105,7 @@ def info():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/align", methods=["POST"])
+@app.route("/api/align", methods=["POST"])
 def align():
     try:
         # Your IndiController.align() takes no params
@@ -101,7 +114,7 @@ def align():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/set_time", methods=["POST"])
+@app.route("/api/set_time", methods=["POST"])
 def set_time():
     try:
         data = request.get_json()
@@ -111,6 +124,23 @@ def set_time():
         return jsonify({"status": "success", "message": "Time set"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route('/api/coordinates', methods=['POST'])
+def slew_to_coordinates():
+    data = request.json
+    ra_str = data.get("ra")
+    dec_str = data.get("dec")
+
+    try:
+        ra = hms_to_hours(ra_str)
+        dec = dms_to_degrees(dec_str)
+        print(f"[DEBUG] Slewing to RA={ra}, Dec={dec}")
+        controller.slew_to(ra, dec)
+        return jsonify({'message': 'Slew command sent', 'status': 'success'})
+    except Exception as e:
+        return jsonify({'message': str(e), 'status': 'error'})
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7123)

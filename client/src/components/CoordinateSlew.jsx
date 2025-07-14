@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getCurrentPosition } from '../api/telescopeAPI'; // You'll need to create this API call
+import { getCurrentPosition } from '../api/telescopeAPI'; 
 
 export default function CoordinateSlew({ onSlew }) {
   const [ra, setRa] = useState('');
