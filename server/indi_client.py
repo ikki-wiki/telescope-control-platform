@@ -8,7 +8,7 @@ class IndiClient(PyIndi.BaseClient):
         self.devices = {}
 
     def newDevice(self, device):
-        self.logger.info(f"New device: {device.getDeviceName()}")
+        #self.logger.info(f"New device: {device.getDeviceName()}")
         self.devices[device.getDeviceName()] = device
 
     def removeDevice(self, device):
