@@ -10,7 +10,7 @@ CORS(app)
 logging.basicConfig(level=logging.DEBUG)
 
 # Initialize and connect the INDI telescope controller
-controller = IndiTelescopeController(host="localhost", port=7624)
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
 
 try:
     controller.connect()

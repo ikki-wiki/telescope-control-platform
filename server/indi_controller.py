@@ -5,10 +5,11 @@ import logging
 from indi_client import IndiClient
 
 class IndiTelescopeController(BaseTelescopeController):
-    def __init__(self, host="localhost", port=7624):
+    def __init__(self, host="localhost", port=7624, device_name="LX200 Autostar"):
         self.client = IndiClient()
         self.client.setServer(host, port)
         self.device = None
+        self.device_name = device_name  # <--- store the device name
         self.logger = logging.getLogger('IndiTelescopeController')
 
     def connect(self):
@@ -16,25 +17,81 @@ class IndiTelescopeController(BaseTelescopeController):
         if not self.client.connectServer():
             raise ConnectionError(f"Unable to connect to INDI server at {self.client.getHost()}:{self.client.getPort()}")
 
-        # Wait for devices to be discovered (populate self.client.devices via callbacks)
-        for _ in range(10):
-            if self.client.getDeviceByName("Telescope Simulator"):
+        self.client.watchDevice(self.device_name)
+
+        # Wait up to 15 seconds for device to be detected by the client
+        for i in range(30):
+            self.device = self.client.getDevice(self.device_name)
+            if self.device:
+                self.logger.info(f"Device '{self.device_name}' found")
                 break
             time.sleep(0.5)
         else:
-            raise RuntimeError("Device 'Telescope Simulator' not found")
+            raise RuntimeError(f"Device '{self.device_name}' not found")
 
-        self.device = self.client.getDeviceByName("Telescope Simulator")
-        self.client.connectDevice(self.device.getDeviceName())
+        # --- SET CONNECTION MODE TO TCP ---
+        conn_mode = self.device.getSwitch("CONNECTION_MODE")
+        if conn_mode:
+            conn_mode[0].s = PyIndi.ISS_OFF  # Serial
+            conn_mode[1].s = PyIndi.ISS_ON   # TCP
+            self.client.sendNewSwitch(conn_mode)
+            time.sleep(1)
+            self.logger.info("Switched connection mode to TCP")
 
-        # Wait for properties to populate
-        for _ in range(10):
-            eq = self.device.getNumber("EQUATORIAL_EOD_COORD")
-            if eq:
+        # Set DEVICE_ADDRESS if available
+        device_address = self.device.getText("DEVICE_ADDRESS")
+        if device_address:
+            device_address[0].text = "10.0.0.1"
+            self.client.sendNewText(device_address)
+
+        # Set DEVICE_PORT if available
+        device_port = self.device.getNumber("DEVICE_PORT")
+        if device_port:
+            device_port[0].value = 4030
+            self.client.sendNewNumber(device_port)
+
+        # Some versions might expose both IP/PORT in a 'TCP' field
+        tcp_field = self.device.getText("TCP")
+        if tcp_field and len(tcp_field) >= 2:
+            tcp_field[0].text = "10.0.0.1"
+            tcp_field[1].text = "4030"
+            self.client.sendNewText(tcp_field)
+
+        # --- CONNECT DEVICE ---
+        telescope_connect = self.device.getSwitch("CONNECTION")
+        for _ in range(30):
+            if telescope_connect:
                 break
             time.sleep(0.5)
+            telescope_connect = self.device.getSwitch("CONNECTION")
+
+        if telescope_connect and not self.device.isConnected():
+            telescope_connect[0].s = PyIndi.ISS_ON   # CONNECT
+            telescope_connect[1].s = PyIndi.ISS_OFF  # DISCONNECT
+            self.client.sendNewSwitch(telescope_connect)
+            self.logger.info("Sent telescope connect command to device")
+
+        # --- WAIT FOR TELESCOPE PROPERTIES TO LOAD ---
+        for _ in range(300):
+            equat1 = self.device.getNumber("EQUATORIAL_EOD_COORD")
+            equat2 = self.device.getNumber("EQUATORIAL_COORD")
+            if equat1 or equat2:
+                self.logger.info("Telescope properties successfully loaded")
+                break
+            # 👇 Add this line
+            self.logger.debug(f"Available so far: {[p.getName() for p in self.device.getProperties()]}")
+            time.sleep(0.5)
         else:
+            # 👇 Add this for better diagnostics
+            self.logger.error("Final properties found: %s", [p.getName() for p in self.device.getProperties()])
             raise RuntimeError("Device properties did not populate in time")
+
+
+        # Debug: print loaded properties
+        for prop in self.device.getProperties():
+            print("Property:", prop.getName())
+
+
 
     def disconnect(self):
         self.client.disconnectServer()
@@ -48,8 +105,8 @@ class IndiTelescopeController(BaseTelescopeController):
         if eq is None:
             raise RuntimeError("Could not get EQUATORIAL_EOD_COORD property")
         # getNumber returns a PyIndi property object; map it to RA/DEC values:
-        ra = eq[0].getValue()  # RA
-        dec = eq[1].getValue() # DEC
+        ra = eq[0].value  # RA
+        dec = eq[1].value # DEC
         return ra, dec
 
     def slew_to(self, ra: float, dec: float):
@@ -57,30 +114,53 @@ class IndiTelescopeController(BaseTelescopeController):
 
         # Step 1: Set ON_COORD_SET to SLEW
         coord_mode = self.device.getSwitch("ON_COORD_SET")
-        if coord_mode is not None:
-            for s in coord_mode:
-                s.setState(PyIndi.ISS_OFF)
-            for s in coord_mode:
-                if s.name.upper() == "SLEW":
-                    s.setState(PyIndi.ISS_ON)
-                    break
-            self.client.sendNewSwitch(coord_mode)
-            self.logger.debug("[SLEW] ON_COORD_SET set to SLEW")
-        else:
-            raise RuntimeError("ON_COORD_SET not found")
+        while not(coord_mode):
+            time.sleep(0.5)
+            coord_mode=self.device.getSwitch("ON_COORD_SET")
 
+        #if coord_mode is not None:
+        #    for s in coord_mode:
+        #        s.setState(PyIndi.ISS_OFF)
+        #    for s in coord_mode:
+        #        if s.name.upper() == "SLEW":
+        #            s.setState(PyIndi.ISS_ON)
+        #            break
+        #    self.client.sendNewSwitch(coord_mode)
+        #    indiclient.sendNewSwitch(telescope_on_coord_set)
+        
+        coord_mode[0].s=PyIndi.ISS_ON  # TRACK
+        coord_mode[1].s=PyIndi.ISS_OFF # SLEW
+        coord_mode[2].s=PyIndi.ISS_OFF # SYNC
+        self.client.sendNewSwitch(coord_mode)
+
+        # We set the desired coordinates
+        telescope_radec=self.device.getNumber("EQUATORIAL_EOD_COORD")
+        while not(telescope_radec):
+            time.sleep(0.5)
+            telescope_radec=device_telescope.getNumber("EQUATORIAL_EOD_COORD")
+        telescope_radec[0].value=ra
+        telescope_radec[1].value=dec
+        self.client.sendNewNumber(telescope_radec)
+        # and wait for the scope has finished moving
+        while (telescope_radec.getState() == PyIndi.IPS_BUSY):
+            print("Scope Moving ", telescope_radec[0].value, telescope_radec[1].value)
+            print("State:", telescope_radec.getState())
+            time.sleep(0.5)
+
+        print("State:", telescope_radec.getState())
+        self.logger.debug("[SLEW] ON_COORD_SET set to SLEW")
         time.sleep(0.5)  # Give INDI a moment to register switch
 
         # Step 2: Set RA and DEC
-        eq = self.device.getNumber("EQUATORIAL_EOD_COORD")
-        if eq is None:
-            raise RuntimeError("Could not get EQUATORIAL_EOD_COORD property")
+        #eq = self.device.getNumber("EQUATORIAL_EOD_COORD")
+        #if eq is None:
+        #    raise RuntimeError("Could not get EQUATORIAL_EOD_COORD property")
 
-        eq[0].setValue(ra)   # RA (in hours)
-        eq[1].setValue(dec)  # DEC (in degrees)
+        #eq[0].setValue(ra)   # RA (in hours)
+        #eq[1].setValue(dec)  # DEC (in degrees)
 
-        self.client.sendNewNumber(eq)
-        self.logger.info("[SLEW] Slew command sent.")
+        #self.client.sendNewNumber(eq)
+        #self.logger.info("[SLEW] Slew command sent.")
 
 
     def abort_slew(self):
