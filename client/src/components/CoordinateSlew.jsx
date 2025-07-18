@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getCurrentPosition } from '../api/telescopeAPI'; 
+import { getTelescopeCoordinates } from '../api/telescopeAPI'; 
 
 export default function CoordinateSlew({ onSlew }) {
   const [ra, setRa] = useState('');
@@ -14,7 +14,7 @@ export default function CoordinateSlew({ onSlew }) {
 
   const fetchCurrentPosition = async () => {
     try {
-      const position = await getCurrentPosition();
+      const position = await getTelescopeCoordinates();
       setCurrentRa(position.ra);
       setCurrentDec(position.dec);
     } catch (error) {

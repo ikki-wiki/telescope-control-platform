@@ -5,27 +5,36 @@ class IndiClient(PyIndi.BaseClient):
     def __init__(self):
         super(IndiClient, self).__init__()
         self.logger = logging.getLogger('IndiClient')
-        self.devices = {}
+        self.logger.info('creating an instance of IndiClient')
 
-    def newDevice(self, device):
-        #self.logger.info(f"New device: {device.getDeviceName()}")
-        self.devices[device.getDeviceName()] = device
+    def newDevice(self, d):
+        '''Emmited when a new device is created from INDI server.'''
+        self.logger.info(f"new device {d.getDeviceName()}")
 
-    def removeDevice(self, device):
-        self.logger.info(f"Remove device: {device.getDeviceName()}")
-        self.devices.pop(device.getDeviceName(), None)
+    def removeDevice(self, d):
+        '''Emmited when a device is deleted from INDI server.'''
+        self.logger.info(f"remove device {d.getDeviceName()}")
 
-    def newProperty(self, prop):
-        self.logger.info(f"New property: {prop.getName()} for device {prop.getDeviceName()}")
+    def newProperty(self, p):
+        '''Emmited when a new property is created for an INDI driver.'''
+        self.logger.info(f"new property {p.getName()} as {p.getTypeAsString()} for device {p.getDeviceName()}")
 
-    def updateProperty(self, prop):
-        self.logger.debug(f"Update property: {prop.getName()} for device {prop.getDeviceName()}")
+    def updateProperty(self, p):
+        '''Emmited when a new property value arrives from INDI server.'''
+        self.logger.info(f"update property {p.getName()} as {p.getTypeAsString()} for device {p.getDeviceName()}")
+
+    def removeProperty(self, p):
+        '''Emmited when a property is deleted for an INDI driver.'''
+        self.logger.info(f"remove property {p.getName()} as {p.getTypeAsString()} for device {p.getDeviceName()}")
+
+    def newMessage(self, d, m):
+        '''Emmited when a new message arrives from INDI server.'''
+        self.logger.info(f"new Message {d.messageQueue(m)}")
 
     def serverConnected(self):
-        self.logger.info(f"Connected to INDI server at {self.getHost()}:{self.getPort()}")
+        '''Emmited when the server is connected.'''
+        self.logger.info(f"Server connected ({self.getHost()}:{self.getPort()})")
 
     def serverDisconnected(self, code):
-        self.logger.warning(f"Disconnected from INDI server with code {code}")
-
-    def getDeviceByName(self, name):
-        return self.devices.get(name, None)
+        '''Emmited when the server gets disconnected.'''
+        self.logger.info(f"Server disconnected (exit code = {code},{self.getHost()}:{self.getPort()})")

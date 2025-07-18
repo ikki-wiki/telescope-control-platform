@@ -16,15 +16,6 @@ export async function slewToCoordinates(ra, dec) {
   });
 }
 
-export async function getTelescopeInfo(infoType) {
-  const res = await fetch(`${BASE_URL}/information`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ command: infoType })
-  });
-  return res.json();
-}
-
 export async function getDate() {
   const res = await fetch(`${BASE_URL}/date`, {
     method: 'GET',
@@ -72,8 +63,8 @@ export async function setTime(timeString) {
 }
 
 
-export async function getCurrentPosition() {
-  const res = await fetch(`${BASE_URL}/currentPosition`, {
+export async function getTelescopeCoordinates() {
+  const res = await fetch(`${BASE_URL}/coordinates`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' }
   });

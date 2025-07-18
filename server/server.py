@@ -9,15 +9,12 @@ CORS(app)
 
 logging.basicConfig(level=logging.DEBUG)
 
-# Initialize and connect the INDI telescope controller
 controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
 
 try:
     controller.connect()
 except Exception as e:
     logging.error(f"Failed to connect to INDI server: {e}")
-    # Optionally, handle this more gracefully or exit
-
 
 def hms_to_hours(hms):
     h, m, s = map(float, hms.strip().split(':'))
@@ -89,14 +86,6 @@ def unpark():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/api/position", methods=["GET"])
-def position():
-    try:
-        pos = controller.get_current_position()
-        return jsonify({"status": "success", "position": pos})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
 @app.route("/api/info", methods=["GET"])
 def info():
     try:
@@ -151,6 +140,14 @@ def set_date():
         date_datetime = datetime.strptime(date_str, "%Y-%m-%d")
         controller.set_date(date_datetime)
         return jsonify({"status": "success", "message": "Date set"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/coordinates", methods=["GET"])
+def get_coordinates():
+    try:
+        position = controller.get_coordinates()
+        return jsonify({"status": "success", "position": position})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
