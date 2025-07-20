@@ -8,35 +8,28 @@ class IndiTelescopeController(BaseTelescopeController):
     def __init__(self, host="localhost", port=7624, device_name="LX200 Autostar"):
         self.client = IndiClient()
         self.client.setServer(host, port)
-        self.device = self.client.getDevice(device_name)
-        #self.device_name = device_name
+        self.device = None
+        self.device_name = device_name
         self.logger = logging.getLogger('IndiTelescopeController')
 
     def connect(self):
-        #self.client.watchDevice(self.device_name)
-        
-        if not self.client.connectServer():
-            cmonitor = self.device.getSwitch("CONNECTION")
-            cmonitor[0].s = PyIndi.ISS_ON  # CONNECT
-            cmonitor[1].s = PyIndi.ISS_OFF # DISCONNECT
-            self.client.sendNewSwitch(cmonitor)
-        
-        # Waiting for discover devices
-        time.sleep(1)
+        self.client.watchDevice(self.device_name)
 
-        # Wait up to 15 seconds for device to be detected by the client
-        '''for i in range(30):
+        if not self.client.connectServer():
+            raise RuntimeError("Failed to connect to INDI server")
+
+        # Wait for device to appear
+        for i in range(30):
             self.device = self.client.getDevice(self.device_name)
             if self.device:
                 self.logger.info(f"Device '{self.device_name}' found")
                 break
             time.sleep(0.5)
         else:
-            raise RuntimeError(f"Device '{self.device_name}' not found")'''
+            raise RuntimeError(f"Device '{self.device_name}' not found")
 
-        print("List of devices")
-        deviceList = self.client.getDevices()
-        for device in deviceList:
+        print("List of devices:")
+        for device in self.client.getDevices():
             print(f"   > {device.getDeviceName()}")
 
         # --- SET CONNECTION MODE TO TCP ---
@@ -45,60 +38,51 @@ class IndiTelescopeController(BaseTelescopeController):
             conn_mode[0].s = PyIndi.ISS_OFF  # Serial
             conn_mode[1].s = PyIndi.ISS_ON   # TCP
             self.client.sendNewSwitch(conn_mode)
-            time.sleep(1)
-            self.logger.info("Switched connection mode to TCP")
+            time.sleep(2)
 
         # Set DEVICE_ADDRESS if available
         device_address = self.device.getText("DEVICE_ADDRESS")
         if device_address:
             device_address[0].text = "10.0.0.1"
             self.client.sendNewText(device_address)
+            time.sleep(2)
 
         # Set DEVICE_PORT if available
         device_port = self.device.getNumber("DEVICE_PORT")
         if device_port:
             device_port[0].value = 4030
             self.client.sendNewNumber(device_port)
+            time.sleep(2)
 
-        # Some versions might expose both IP/PORT in a 'TCP' field
+        # Alternative TCP setting field
         tcp_field = self.device.getText("TCP")
         if tcp_field and len(tcp_field) >= 2:
             tcp_field[0].text = "10.0.0.1"
             tcp_field[1].text = "4030"
             self.client.sendNewText(tcp_field)
+            time.sleep(2)
 
         # --- CONNECT DEVICE ---
-        '''telescope_connect = self.device.getSwitch("CONNECTION")
-        for _ in range(30):
-            if telescope_connect:
-                break
-            time.sleep(0.5)
-            telescope_connect = self.device.getSwitch("CONNECTION")
+        connect_switch = self.device.getSwitch("CONNECTION")
+        if connect_switch and not self.device.isConnected():
+            connect_switch[0].s = PyIndi.ISS_ON
+            connect_switch[1].s = PyIndi.ISS_OFF
+            self.client.sendNewSwitch(connect_switch)
+            self.logger.info("Sent connect command")
+            time.sleep(2)
 
-        if telescope_connect and not self.device.isConnected():
-            telescope_connect[0].s = PyIndi.ISS_ON   # CONNECT
-            telescope_connect[1].s = PyIndi.ISS_OFF  # DISCONNECT
-            self.client.sendNewSwitch(telescope_connect)
-            self.logger.info("Sent telescope connect command to device")'''
-
-        # --- WAIT FOR TELESCOPE PROPERTIES TO LOAD ---
+        # --- WAIT FOR PROPERTIES TO LOAD ---
         for _ in range(10):
             equat1 = self.device.getNumber("EQUATORIAL_EOD_COORD")
             equat2 = self.device.getNumber("EQUATORIAL_COORD")
             if equat1 or equat2:
                 self.logger.info("Telescope properties successfully loaded")
                 break
-            # 👇 Add this line
             self.logger.debug(f"Available so far: {[p.getName() for p in self.device.getProperties()]}")
             time.sleep(1)
         else:
-            # 👇 Add this for better diagnostics
             self.logger.error("Final properties found: %s", [p.getName() for p in self.device.getProperties()])
             raise RuntimeError("Device properties did not populate in time")
-
-        # Debug: print loaded properties
-        for prop in self.device.getProperties():
-            print("Property:", prop.getName())
 
     def disconnect(self):
         self.client.disconnectServer()
@@ -237,8 +221,11 @@ class IndiTelescopeController(BaseTelescopeController):
         time_prop = self.device.getText("TIME_UTC")
         if not time_prop:
             raise RuntimeError("TIME_UTC property not available on device")
-        time = time_prop[0].getText().split("T")     
-        return time[1]
+        #time = time_prop[0].getText().split("T")     
+        #return time[1]
+        time_text = time_prop[0].getText()
+        time = time_text.split("T")[1]  # for get_telescope_time
+        return time
 
     def set_time(self, new_time):
         """Sets telescope time (if supported)."""

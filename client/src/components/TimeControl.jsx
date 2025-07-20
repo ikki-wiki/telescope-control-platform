@@ -42,6 +42,7 @@ export default function TimeControl() {
       <p>Current telescope time: <strong>{currentTime || 'Loading...'}</strong></p>
       <input
         type="time"
+        step="1"   
         value={newTime}
         onChange={e => setNewTime(e.target.value)}
         className="border border-gray-300 rounded px-3 py-2 my-2"
