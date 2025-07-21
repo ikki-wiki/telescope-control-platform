@@ -105,9 +105,11 @@ class IndiTelescopeController(BaseTelescopeController):
         eq = self.device.getNumber("EQUATORIAL_EOD_COORD")
         if eq is None:
             raise RuntimeError("Could not get EQUATORIAL_EOD_COORD property")
-        ra = eq[0].value  # RA
-        dec = eq[1].value # DEC
-        return ra, dec
+        position = {
+            "ra": eq[0].value,  # RA
+            "dec": eq[1].value  # DEC
+        }
+        return position
 
     def slew_to(self, ra, dec):
         self.logger.debug(f"[SLEW] Slewing to RA={ra}, DEC={dec}")
@@ -242,9 +244,11 @@ class IndiTelescopeController(BaseTelescopeController):
         time_prop = self.device.getText("TIME_UTC")
         if not time_prop:
             raise RuntimeError("TIME_UTC property not available on device")
-        time = time_prop.split("T")
-        time[1] = new_time.strftime("%H:%M:%S")
-        time_prop = time[0] + "T" + time[1]
+        
+        current_value = time_prop[0].getText()
+        date_part = current_value.split("T")[0]
+        new_utc = f"{date_part}T{new_time.strftime('%H:%M:%S')}"
+        time_prop[0].setText(new_utc)
         self.client.sendNewText(time_prop)
 
     def get_telescope_date(self):
@@ -256,11 +260,12 @@ class IndiTelescopeController(BaseTelescopeController):
         return date_prop[0]
     
     def set_date(self, new_date):
-        """Sets telescope date (if supported)."""
         date_prop = self.device.getText("TIME_UTC")
         if not date_prop:
-            raise RuntimeError("DATE_UTC or TIME_UTC property not available on device")
-        date = date_prop.split("T")
-        date[1] = new_date.isoformat()
-        date_prop = date[0] + "T" + date[1]
+            raise RuntimeError("TIME_UTC property not available on device")
+        
+        current_value = date_prop[0].getText()
+        time_part = current_value.split("T")[1]
+        new_utc = f"{new_date.strftime('%Y-%m-%d')}T{time_part}"
+        date_prop[0].setText(new_utc)
         self.client.sendNewText(date_prop)

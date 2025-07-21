@@ -54,7 +54,7 @@ def slew():
 @app.route("/api/abort", methods=["POST"])
 def abort():
     try:
-        controller.abort_slew()
+        controller.abort_motion()
         return jsonify({"status": "success", "message": "Slew aborted"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
@@ -117,7 +117,7 @@ def set_time():
     try:
         data = request.get_json()
         time_str = data["time"]
-        time_obj = datetime.strptime(time_str, "%H:%M")
+        time_obj = datetime.strptime(time_str, "%H:%M:%S")
         controller.set_time(time_obj)
         return jsonify({"status": "success", "message": "Time set"})
     except Exception as e:
