@@ -183,7 +183,6 @@ class IndiTelescopeController(BaseTelescopeController):
             raise RuntimeError("Could not get TELESCOPE_ABORT_MOTION property")
         sw[0].s = PyIndi.ISS_ON
         self.client.sendNewSwitch(sw)
-        return {"status": "Motion aborted"}
 
     def park(self):
         sw = self.device.getSwitch("TELESCOPE_PARK")
@@ -202,6 +201,50 @@ class IndiTelescopeController(BaseTelescopeController):
         sw[1].s = PyIndi.ISS_ON  # UNPARK
         self.client.sendNewSwitch(sw)
         return {"status": "Telescope unparked"}
+
+    def get_parking_status(self):
+        sw = self.device.getSwitch("TELESCOPE_PARK")
+        if sw is None:
+            raise RuntimeError("Could not get TELESCOPE_PARK property")
+        if sw[0].s == PyIndi.ISS_ON:
+            return "Parked"
+        elif sw[1].s == PyIndi.ISS_ON:
+            return "Unparked"
+        else:
+            return "Unknown"
+
+    def get_park_position(self):
+        prop = self.device.getNumber("TELESCOPE_PARK_POSITION")
+        if prop is None:
+            raise RuntimeError("TELESCOPE_PARK_POSITION not found")
+
+        ra = prop.getElement("PARK_RA")
+        dec = prop.getElement("PARK_DEC")
+
+        if ra is None or dec is None:
+            raise RuntimeError("RA/DEC or AZ/ALT not available")
+
+        return {
+            "ra": f"{ra.value:.2f}",
+            "dec": f"{dec.value:.2f}"
+        }
+
+    def set_park_position(self, ra, dec):
+        prop = self.device.getNumber("TELESCOPE_PARK_POSITION")
+        if "PARK_RA" in prop:
+            prop["PARK_RA"].value = ra
+            prop["PARK_DEC"].value = dec
+        else:
+            prop["PARK_AZ"].value = ra
+            prop["PARK_ALT"].value = dec
+        self.device.sendNewNumber(prop)
+
+    def set_park_option(self, option):
+        prop = self.device.getSwitch("TELESCOPE_PARK_OPTION")
+        for key in prop:
+            prop[key].value = (key == option)
+        self.device.sendNewSwitch(prop)
+
 
     def move(self, direction: str):
         """Moves telescope in a specified direction with given rate."""

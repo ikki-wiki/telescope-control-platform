@@ -1,19 +1,15 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-export async function moveTelescope(direction) {
-  return fetch(`${BASE_URL}/movement`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ command: direction })
-  });
-}
-
 export async function slewToCoordinates(ra, dec) {
-  return fetch(`${BASE_URL}/coordinates`, {
+  const res = await fetch(`${BASE_URL}/slew`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ra: ra, dec: dec })
   });
+  if (!res.ok) {
+    throw new Error('Failed to slew telescope');
+  }
+  return res.json();
 }
 
 export async function getDate() {
@@ -70,4 +66,78 @@ export async function getTelescopeCoordinates() {
   });
   const data = await res.json();
   return data.position;
+}
+
+export async function abortMotion() {
+  const res = await fetch(`${BASE_URL}/abort`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    throw new Error('Failed to abort telescope motion');
+  }
+  return res.json();
+}
+
+export async function parkTelescope() {
+  const res = await fetch(`${BASE_URL}/park`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    throw new Error('Failed to park telescope');
+  }
+  return res.json();
+}
+
+export async function unparkTelescope() {
+  const res = await fetch(`${BASE_URL}/unpark`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    throw new Error('Failed to unpark telescope');
+  }
+  return res.json();
+}
+
+export async function getTelescopeParkingStatus() {
+  const res = await fetch(`${BASE_URL}/parking-status`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    throw new Error('Failed to get telescope parking status');
+  }
+  const data = await res.json();
+  return data.status;
+}
+
+export async function getParkPosition() {
+  const res = await fetch(`${BASE_URL}/park-position`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    throw new Error('Failed to fetch park position');
+  }
+  return res.json();
+}
+
+export async function setParkPosition(ra, dec) {
+  const res = await fetch('/api/park-position', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ra, dec }),
+  });
+  if (!res.ok) throw new Error('Failed to set park position');
+}
+
+export async function setParkOption(option) {
+  const res = await fetch('/api/park-option', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ option }),
+  });
+  if (!res.ok) throw new Error('Failed to set park option');
 }

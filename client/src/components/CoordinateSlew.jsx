@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getTelescopeCoordinates } from '../api/telescopeAPI'; 
+import { getTelescopeCoordinates, slewToCoordinates } from '../api/telescopeAPI'; 
 
-export default function CoordinateSlew({ onSlew }) {
+export default function CoordinateSlew() {
   const [ra, setRa] = useState('');
   const [dec, setDec] = useState('');
   const [currentRa, setCurrentRa] = useState('00:00:00');
@@ -24,8 +24,6 @@ export default function CoordinateSlew({ onSlew }) {
 
   useEffect(() => {
     fetchCurrentPosition();
-
-    // Optional: Auto-refresh every 5 seconds
     const interval = setInterval(fetchCurrentPosition, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -47,8 +45,12 @@ export default function CoordinateSlew({ onSlew }) {
     }
 
     setIsLoading(true);
-    await onSlew(ra, dec);
-    await fetchCurrentPosition();  // Refresh after slew
+    try {
+      await slewToCoordinates(ra, dec);
+      await fetchCurrentPosition(); // Refresh after slew
+    } catch (err) {
+      alert('Failed to slew: ' + err.message);
+    }
     setIsLoading(false);
   };
 
@@ -104,6 +106,7 @@ export default function CoordinateSlew({ onSlew }) {
             placeholder="e.g. 05:34:31"
             value={ra}
             onChange={(e) => setRa(e.target.value)}
+            disabled={isLoading}
           />
         </label>
 
@@ -115,16 +118,25 @@ export default function CoordinateSlew({ onSlew }) {
             placeholder="e.g. +22:00:52"
             value={dec}
             onChange={(e) => setDec(e.target.value)}
+            disabled={isLoading}
           />
         </label>
 
         <button
+          type="button"
           onClick={handleSubmit}
           disabled={isLoading}
           className={`${
-            isLoading ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'
-          } text-white font-semibold rounded py-2 transition`}
+            isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
+          } text-white font-semibold rounded py-2 transition flex items-center justify-center gap-2`}
         >
+          {isLoading && (
+            <span
+              className="spinner-border animate-spin inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full"
+              role="status"
+              aria-label="loading"
+            ></span>
+          )}
           {isLoading ? 'Sending...' : 'Slew to coordinates'}
         </button>
       </div>

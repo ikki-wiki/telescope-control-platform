@@ -30,45 +30,20 @@ def dms_to_degrees(dms):
 def home():
     return jsonify({"message": "Telescope control server is running"}), 200
 
-@app.route("/api/move/<direction>", methods=["POST"])
-def move(direction):
-    try:
-        # Assuming a default rate; you could accept a JSON param for rate if you want
-        default_rate = 1.0
-        result = controller.move(direction, default_rate)
-        return jsonify({"status": "success", "result": result})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
 @app.route("/api/slew", methods=["POST"])
-def slew():
+def slew_to_coordinates():
+    data = request.json
+    ra_str = data.get("ra")
+    dec_str = data.get("dec")
+
     try:
-        data = request.get_json()
-        ra = float(data["ra"])
-        dec = float(data["dec"])
+        ra = hms_to_hours(ra_str)
+        dec = dms_to_degrees(dec_str)
+        print(f"[DEBUG] Slewing to RA={ra}, Dec={dec}")
         controller.slew_to(ra, dec)
-        return jsonify({"status": "success", "message": "Slew command sent"})
+        return jsonify({'message': 'Slew command sent', 'status': 'success'})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-@app.route("/api/abort", methods=["POST"])
-def abort():
-    try:
-        controller.abort_motion()
-        return jsonify({"status": "success", "message": "Slew aborted"})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-@app.route("/api/sync", methods=["POST"])
-def sync():
-    try:
-        data = request.get_json()
-        ra = float(data["ra"])
-        dec = float(data["dec"])
-        controller.sync_to(ra, dec)
-        return jsonify({"status": "success", "message": "Telescope synced"})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
+        return jsonify({'message': str(e), 'status': 'error'})
 
 @app.route("/api/park", methods=["POST"])
 def park():
@@ -86,20 +61,35 @@ def unpark():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/api/info", methods=["GET"])
-def info():
+@app.route("/api/parking-status", methods=["GET"])
+def parking_status():
     try:
-        info = controller.get_info()
-        return jsonify({"status": "success", "info": info})
+        status = controller.get_parking_status()
+        return jsonify({"status": "success", "parking-status": status})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/api/align", methods=["POST"])
-def align():
+@app.route("/api/park-position", methods=["GET"])
+def get_park_position():
+    return jsonify(controller.get_park_position())
+
+@app.route("/api/park-position", methods=["POST"])
+def post_park_position():
+    data = request.get_json()
+    controller.set_park_position(float(data["ra"]), float(data["dec"]))
+    return jsonify({"status": "ok"})
+
+@app.route("/api/park-option", methods=["POST"])
+def set_park_option():
+    data = request.get_json()
+    controller.set_park_option(data["option"])  # PARK_CURRENT or PARK_DEFAULT
+    return jsonify({"status": "ok"})  
+
+@app.route("/api/abort", methods=["POST"])
+def abort():
     try:
-        # Your IndiController.align() takes no params
-        result = controller.align()
-        return jsonify({"status": "success", "result": result})
+        controller.abort_motion()
+        return jsonify({"status": "success", "message": "Motion aborted"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
@@ -150,22 +140,6 @@ def get_coordinates():
         return jsonify({"status": "success", "position": position})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
-
-@app.route('/api/coordinates', methods=['POST'])
-def slew_to_coordinates():
-    data = request.json
-    ra_str = data.get("ra")
-    dec_str = data.get("dec")
-
-    try:
-        ra = hms_to_hours(ra_str)
-        dec = dms_to_degrees(dec_str)
-        print(f"[DEBUG] Slewing to RA={ra}, Dec={dec}")
-        controller.slew_to(ra, dec)
-        return jsonify({'message': 'Slew command sent', 'status': 'success'})
-    except Exception as e:
-        return jsonify({'message': str(e), 'status': 'error'})
-
 
 
 if __name__ == "__main__":
