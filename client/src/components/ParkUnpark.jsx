@@ -8,7 +8,7 @@ export default function ParkUnpark() {
   const fetchParkingStatus = async () => {
     try {
       const status = await getTelescopeParkingStatus();
-      setIsParked(status === 'Parked');
+      //setIsParked(status === 'Parked');
     } catch (err) {
       console.error('Failed to get parking status:', err);
     }
@@ -24,6 +24,7 @@ export default function ParkUnpark() {
     setIsLoading(true);
     try {
       await parkTelescope();
+      setIsParked(true)
       await fetchParkingStatus();
     } catch (err) {
       alert('Error parking telescope: ' + err.message);
@@ -35,6 +36,7 @@ export default function ParkUnpark() {
     setIsLoading(true);
     try {
       await unparkTelescope();
+      setIsParked(false)
       await fetchParkingStatus();
     } catch (err) {
       alert('Error unparking telescope: ' + err.message);

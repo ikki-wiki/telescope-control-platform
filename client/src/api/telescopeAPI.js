@@ -46,11 +46,11 @@ export async function getTime() {
   return res.json();
 }
 
-export async function setTime(timeString) {
+export async function setTime(time, offset) {
   const res = await fetch(`${BASE_URL}/time`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ time: timeString }),
+    body: JSON.stringify({ time: time, offset: offset }),
   });
   if (!res.ok) {
     throw new Error('Failed to set telescope time');

@@ -271,30 +271,60 @@ class IndiTelescopeController(BaseTelescopeController):
         self.client.sendNewSwitch(motion)
         return {"status": f"Telescope moving {direction}"}
 
-    def get_telescope_time(self):
-        """Returns the current time of the telescope."""
+    def get_time(self):
+        """Returns the current UTC time and offset of the telescope."""
         time_prop = self.device.getText("TIME_UTC")
         if not time_prop:
             raise RuntimeError("TIME_UTC property not available on device")
-        #time = time_prop[0].getText().split("T")     
-        #return time[1]
-        time_text = time_prop[0].getText()
-        time = time_text.split("T")[1]  # for get_telescope_time
-        return time
 
-    def set_time(self, new_time):
-        """Sets telescope time (if supported)."""
+        for item in time_prop:
+            print(item.getName(), item.getText())
+
+        utc_value = None
+        offset_value = None
+
+        for item in time_prop:
+            if item.getName() == "UTC":
+                utc_value = item.getText()
+            elif item.getName() == "OFFSET":
+                offset_value = item.getText()
+
+        if not utc_value or offset_value is None:
+            raise RuntimeError("UTC or OFFSET not found in TIME_UTC")
+
+        time = utc_value.split("T")[1]  # Extract "HH:MM:SS"
+        return time, offset_value
+
+
+    def set_time(self, new_time, new_offset):
+        """Sets telescope time and UTC offset (if supported)."""
         time_prop = self.device.getText("TIME_UTC")
         if not time_prop:
-            raise RuntimeError("TIME_UTC property not available on device")
-        
-        current_value = time_prop[0].getText()
+            raise RuntimeError("TIME_UTC text property not available on device")
+
+        utc_element = None
+        offset_element = None
+
+        for item in time_prop:
+            if item.getName() == "UTC":
+                utc_element = item
+            elif item.getName() == "OFFSET":
+                offset_element = item
+
+        if utc_element is None or offset_element is None:
+            raise RuntimeError("UTC or OFFSET element not found in TIME_UTC")
+
+        # Set new UTC time
+        current_value = utc_element.getText()
         date_part = current_value.split("T")[0]
         new_utc = f"{date_part}T{new_time.strftime('%H:%M:%S')}"
+
         time_prop[0].setText(new_utc)
+        time_prop[1].setText(new_offset)
         self.client.sendNewText(time_prop)
 
-    def get_telescope_date(self):
+
+    def get_date(self):
         """Returns the current date of the telescope."""
         date_prop = self.device.getText("TIME_UTC")
         if not date_prop:

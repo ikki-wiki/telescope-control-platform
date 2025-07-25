@@ -96,8 +96,8 @@ def abort():
 @app.route("/api/time", methods=["GET"])
 def get_time():
     try:
-        current_time = controller.get_telescope_time()
-        return jsonify({'time': current_time})
+        current_time, current_offset = controller.get_time()
+        return jsonify({'time': current_time, 'offset': current_offset})
     except Exception as e:
         print(f"Error fetching time: {e}")
         return jsonify({'error': 'Failed to get time'}), 500
@@ -106,9 +106,19 @@ def get_time():
 def set_time():
     try:
         data = request.get_json()
+
+        # Parse and validate time string
         time_str = data["time"]
         time_obj = datetime.strptime(time_str, "%H:%M:%S")
-        controller.set_time(time_obj)
+        # Get and validate offset
+        offset = data["offset"]
+        print("offset: " + offset)
+
+        if not -14 <= float(offset) <= 14:
+            raise ValueError("Offset must be between -14 and +14")
+
+        controller.set_time(time_obj, offset)
+
         return jsonify({"status": "success", "message": "Time set"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
@@ -116,7 +126,7 @@ def set_time():
 @app.route("/api/date", methods=["GET"])
 def get_date():
     try:
-        current_date = controller.get_telescope_date()
+        current_date = controller.get_date()
         return jsonify({'date': current_date})
     except Exception as e:
         print(f"Error fetching date: {e}")

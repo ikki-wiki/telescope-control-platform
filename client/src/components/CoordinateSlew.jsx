@@ -59,7 +59,7 @@ export default function CoordinateSlew() {
       <h2 className="text-xl font-semibold mb-4">Slew to Coordinates</h2>
 
       {/* Current Position Display */}
-      <div className="mb-4 p-3 rounded bg-neutral-800 text-neutral-200 shadow-sm">
+      <div className="mb-4 p-3 rounded bg-gray-800 text-gray-100 shadow-sm">
         <h3 className="font-medium mb-2">Current Telescope Position:</h3>
 
         <div className="space-y-1">
