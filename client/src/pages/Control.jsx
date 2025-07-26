@@ -3,6 +3,7 @@ import CoordinateSlew from '../components/CoordinateSlew';
 import AbortMotion from '../components/AbortMotion';
 import ParkUnpark from '../components/ParkUnpark';
 import ParkPositionManager from '../components/ParkPositionManager';
+import SlewToObject from '../components/SlewToObject';
 
 export default function Control() {
 
@@ -11,12 +12,13 @@ export default function Control() {
       <h1 className="text-xl font-bold">Telescope Control</h1>
 
       <div>
-        <CoordinateSlew />
+        {/*<CoordinateSlew />
         <AbortMotion />
         <section className="space-y-6">
           <ParkUnpark />
           <ParkPositionManager />
-        </section>
+        </section>*/}
+        <SlewToObject />
       </div>
     </div>
   );

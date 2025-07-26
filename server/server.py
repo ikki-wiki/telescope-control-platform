@@ -2,6 +2,12 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
 import logging
+from skyfield.api import load
+from astroquery.simbad import Simbad
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+import json
+from pathlib import Path
 from indi_controller import IndiTelescopeController
 
 app = Flask(__name__)
@@ -9,12 +15,32 @@ CORS(app)
 
 logging.basicConfig(level=logging.DEBUG)
 
-controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
+# Load once at startup
+LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
+
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
 
 try:
     controller.connect()
 except Exception as e:
     logging.error(f"Failed to connect to INDI server: {e}")
+
+# Preload solar system ephemeris
+ephemeris = load('de421.bsp')
+planets = {
+    'mercury': ephemeris['mercury'],
+    'venus': ephemeris['venus'],
+    'mars': ephemeris['mars'],
+    'jupiter': ephemeris['jupiter barycenter'],
+    'saturn': ephemeris['saturn barycenter'],
+    'uranus': ephemeris['uranus barycenter'],
+    'neptune': ephemeris['neptune barycenter'],
+    'pluto': ephemeris['pluto barycenter'],
+    'moon': ephemeris['moon'],
+    'sun': ephemeris['sun']
+}
+
+ts = load.timescale()
 
 def hms_to_hours(hms):
     h, m, s = map(float, hms.strip().split(':'))
@@ -44,6 +70,66 @@ def slew_to_coordinates():
         return jsonify({'message': 'Slew command sent', 'status': 'success'})
     except Exception as e:
         return jsonify({'message': str(e), 'status': 'error'})
+
+@app.route("/api/resolve-object", methods=["POST"])
+def resolve_object():
+    try:
+        data = request.get_json()
+        object_name = data.get("object", "").strip()
+        if not object_name:
+            return jsonify({"status": "error", "message": "Object name is required"}), 400
+
+        object_lower = object_name.lower()
+        ra_deg = dec_deg = None
+
+        # Option 1: Planet via Skyfield
+        if object_lower in planets:
+            t = ts.now()
+            obj = planets[object_lower]
+            astrometric = ephemeris['earth'].at(t).observe(obj).apparent()
+            ra, dec, _ = astrometric.radec()
+            ra_deg = ra.hours * 15
+            dec_deg = dec.degrees
+
+        # Option 2: Local catalog
+        else:
+            match = next((o for o in LOCAL_CATALOG if o["name"].lower() == object_lower), None)
+            if match:
+                print(f"[DEBUG] Found local match for {object_name}: {match}")
+                if match.get("type") == "planet":
+                    t = ts.now()
+                    obj = planets[object_lower]
+                    astrometric = ephemeris['earth'].at(t).observe(obj).apparent()
+                    ra, dec, _ = astrometric.radec()
+                    ra_deg = ra.hours * 15
+                    dec_deg = dec.degrees
+                else:
+                    ra_deg = match["ra"]
+                    dec_deg = match["dec"]
+
+            # Option 3 (optional): Simbad online fallback
+            else:
+                try:
+                    result = Simbad.query_object(object_name)
+                    if result is None:
+                        return jsonify({"status": "error", "message": f"Object '{object_name}' not found"}), 404
+                    ra_str = result["RA"][0]
+                    dec_str = result["DEC"][0]
+                    coord = SkyCoord(f"{ra_str} {dec_str}", unit=(u.hourangle, u.deg))
+                    ra_deg = coord.ra.degree
+                    dec_deg = coord.dec.degree
+                except Exception:
+                    return jsonify({"status": "error", "message": f"Object '{object_name}' not found locally and no internet available."}), 404
+
+        return jsonify({
+            "status": "success",
+            "object": object_name,
+            "ra": ra_deg,
+            "dec": dec_deg
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/api/park", methods=["POST"])
 def park():

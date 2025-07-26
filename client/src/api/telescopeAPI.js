@@ -12,6 +12,30 @@ export async function slewToCoordinates(ra, dec) {
   return res.json();
 }
 
+export async function slewToObject(objectName) {
+  const res = await fetch(`${BASE_URL}/slew-object`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ object: objectName })
+  });
+  if (!res.ok) {
+    throw new Error('Failed to slew telescope to object');
+  }
+  return res.json();
+}
+
+export async function resolveObject(objectName) {
+  const res = await fetch(`${BASE_URL}/resolve-object`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ object: objectName })
+  });
+  if (!res.ok) {
+    throw new Error('Failed to resolve object');
+  }
+  return res.json();
+}
+
 export async function getDate() {
   const res = await fetch(`${BASE_URL}/date`, {
     method: 'GET',
@@ -125,7 +149,7 @@ export async function getParkPosition() {
 }
 
 export async function setParkPosition(ra, dec) {
-  const res = await fetch('/api/park-position', {
+  const res = await fetch(`${BASE_URL}/park-position`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ra, dec }),
@@ -134,7 +158,7 @@ export async function setParkPosition(ra, dec) {
 }
 
 export async function setParkOption(option) {
-  const res = await fetch('/api/park-option', {
+  const res = await fetch(`${BASE_URL}/park-option`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ option }),
