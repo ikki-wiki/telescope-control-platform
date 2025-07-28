@@ -247,7 +247,15 @@ class IndiTelescopeController(BaseTelescopeController):
 
 
     def move(self, direction: str):
-        """Moves telescope in a specified direction with given rate."""
+        """Moves telescope in a specified direction."""
+
+        direction = direction.lower()
+
+        if direction == "stop":
+            self.abort_motion()
+            print("Telescope motion stopped")
+            return {"status": "Telescope motion stopped"}
+
         motion_map = {
             "north": "MOTION_NORTH",
             "south": "MOTION_SOUTH",
@@ -258,18 +266,22 @@ class IndiTelescopeController(BaseTelescopeController):
         if not motion_key:
             raise ValueError(f"Invalid direction: {direction}")
 
-        motion = self.device.getSwitch("TELESCOPE_MOTION_NS" if "north" in direction or "south" in direction else "TELESCOPE_MOTION_WE")
+        motion_prop = "TELESCOPE_MOTION_NS" if direction in ["north", "south"] else "TELESCOPE_MOTION_WE"
+        motion = self.device.getSwitch(motion_prop)
         if motion is None:
-            raise RuntimeError("Could not get motion switch")
+            raise RuntimeError(f"Could not get motion switch '{motion_prop}'")
 
         for s in motion:
             s.setState(PyIndi.ISS_OFF)
+
         for s in motion:
             if s.name == motion_key:
                 s.setState(PyIndi.ISS_ON)
+                print(f"Telescope moving {direction}")
 
         self.client.sendNewSwitch(motion)
         return {"status": f"Telescope moving {direction}"}
+
 
     def get_time(self):
         """Returns the current UTC time and offset of the telescope."""

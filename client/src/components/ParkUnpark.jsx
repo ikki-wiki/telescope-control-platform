@@ -46,7 +46,6 @@ export default function ParkUnpark() {
 
   return (
     <section className="p-6 max-w-md">
-      <h2 className="text-xl font-semibold mb-4">Park / Unpark Telescope</h2>
 
       <div className="mb-4">
         <p>

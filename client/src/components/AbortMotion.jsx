@@ -23,7 +23,6 @@ export default function AbortMotion() {
 
   return (
     <section className="p-6 max-w-md">
-      <h2 className="text-xl font-semibold mb-4">Abort Telescope Motion</h2>
       <button
         onClick={handleAbort}
         disabled={isLoading}

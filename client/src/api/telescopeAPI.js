@@ -165,3 +165,15 @@ export async function setParkOption(option) {
   });
   if (!res.ok) throw new Error('Failed to set park option');
 }
+
+export async function moveTelescope(direction) {
+  const res = await fetch(`${BASE_URL}/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ direction }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to move telescope ${direction}`);
+  }
+  return res.json();
+}

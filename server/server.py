@@ -237,6 +237,22 @@ def get_coordinates():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@app.route("/api/move", methods=["POST"])
+def move_telescope():
+    data = request.get_json()
+    direction = data.get("direction")
+
+    if not direction:
+        return jsonify({"status": "error", "message": "Direction required"}), 400
+
+    try:
+        result = controller.move(direction)
+        return jsonify({"status": "success", "message": result["status"]})
+    except ValueError as ve:
+        return jsonify({"status": "error", "message": str(ve)}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Failed to move: {e}"}), 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7123)

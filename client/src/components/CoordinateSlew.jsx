@@ -1,32 +1,14 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { getTelescopeCoordinates, slewToCoordinates } from '../api/telescopeAPI'; 
+import { useState } from 'react';
+import CurrentTelescopePosition from './CurrentTelescopePosition'; // import the new component
+import { slewToCoordinates } from '../api/telescopeAPI'; 
 
 export default function CoordinateSlew() {
   const [ra, setRa] = useState('');
   const [dec, setDec] = useState('');
-  const [currentRa, setCurrentRa] = useState('00:00:00');
-  const [currentDec, setCurrentDec] = useState('+00:00:00');
   const [isLoading, setIsLoading] = useState(false);
 
   const patternRA = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
   const patternDEC = /^[+-](0\d|[1-8]\d|90):[0-5]\d:[0-5]\d$/;
-
-  const fetchCurrentPosition = async () => {
-    try {
-      const position = await getTelescopeCoordinates();
-      setCurrentRa(position.ra);
-      setCurrentDec(position.dec);
-    } catch (error) {
-      console.error('Error fetching current position:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCurrentPosition();
-    const interval = setInterval(fetchCurrentPosition, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleSubmit = async () => {
     if (!ra || !dec) {
@@ -47,7 +29,6 @@ export default function CoordinateSlew() {
     setIsLoading(true);
     try {
       await slewToCoordinates(ra, dec);
-      await fetchCurrentPosition(); // Refresh after slew
     } catch (err) {
       alert('Failed to slew: ' + err.message);
     }
@@ -56,45 +37,9 @@ export default function CoordinateSlew() {
 
   return (
     <section className="p-6 max-w-md">
-      <h2 className="text-xl font-semibold mb-4">Slew to Coordinates</h2>
 
       {/* Current Position Display */}
-      <div className="mb-4 p-3 rounded bg-gray-800 text-gray-100 shadow-sm">
-        <h3 className="font-medium mb-2">Current Telescope Position:</h3>
-
-        <div className="space-y-1">
-          <div>
-            <span className="text-neutral-400">RA:</span>{' '}
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={currentRa}
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                transition={{ duration: 0.3 }}
-                className="font-mono"
-              >
-                {currentRa}
-              </motion.span>
-            </AnimatePresence>
-          </div>
-          <div>
-            <span className="text-neutral-400">DEC:</span>{' '}
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={currentDec}
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                transition={{ duration: 0.3 }}
-                className="font-mono"
-              >
-                {currentDec}
-              </motion.span>
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
+      <CurrentTelescopePosition />
 
       {/* Slew Input */}
       <div className="flex flex-col gap-4">

@@ -6,15 +6,14 @@ export default function DateControl() {
   const [newDate, setNewDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch current date from telescope every 10 seconds
   useEffect(() => {
     const fetchDate = async () => {
-        try {
-            const info = await getDate();
-            setCurrentDate(info.date);
-        } catch (err) {
-            console.error('Failed to fetch date', err);
-        }
+      try {
+        const info = await getDate();
+        setCurrentDate(info.date);
+      } catch (err) {
+        console.error('Failed to fetch date', err);
+      }
     };
     fetchDate();
     const interval = setInterval(fetchDate, 10000);
@@ -40,13 +39,24 @@ export default function DateControl() {
   return (
     <section className="p-6 max-w-md">
       <h2 className="text-xl font-semibold mb-4">Set Telescope Date</h2>
-      <p>Current telescope date: <strong>{currentDate || 'Loading...'}</strong></p>
-      <input
-        type="date"
-        value={newDate}
-        onChange={e => setNewDate(e.target.value)}
-        className="border border-gray-300 rounded px-3 py-2 my-2"
-      />
+
+      <p className="mb-4">
+        Current telescope date: <strong>{currentDate || 'Loading...'}</strong>
+      </p>
+
+      <div className="flex flex-col mb-4">
+        <label htmlFor="date" className="text-sm font-medium mb-1">
+          New Date
+        </label>
+        <input
+          type="date"
+          id="date"
+          value={newDate}
+          onChange={(e) => setNewDate(e.target.value)}
+          className="border border-gray-300 rounded px-3 py-2 text-sm w-60"
+        />
+      </div>
+
       <button
         onClick={handleSubmit}
         disabled={isLoading}
