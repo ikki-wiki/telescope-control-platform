@@ -28,7 +28,7 @@ export default function CurrentTelescopePosition() {
 
       <div className="space-y-1">
         <div>
-          <span className="text-neutral-400">RA:</span>{' '}
+          <span className="text-neutral-400">RA (HMS):</span>{' '}
           <AnimatePresence mode="wait">
             <motion.span
               key={currentRa}
@@ -43,7 +43,7 @@ export default function CurrentTelescopePosition() {
           </AnimatePresence>
         </div>
         <div>
-          <span className="text-neutral-400">DEC:</span>{' '}
+          <span className="text-neutral-400">DEC (DMS):</span>{' '}
           <AnimatePresence mode="wait">
             <motion.span
               key={currentDec}
