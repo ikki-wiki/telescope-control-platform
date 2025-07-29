@@ -275,5 +275,25 @@ def set_track_state():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@app.route("/api/slew-rate", methods=["GET"])
+def get_slew_rate():
+    try:
+        data = controller.get_slew_rate()
+        return jsonify({"status": "success", **data})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/slew-rate", methods=["POST"])
+def set_slew_rate():
+    data = request.get_json()
+    rate_name = data.get("rate")
+    if not rate_name:
+        return jsonify({"status": "error", "message": "Missing rate name"}), 400
+    try:
+        controller.set_slew_rate(rate_name)
+        return jsonify({"status": "success", "message": f"Slew rate set to {rate_name}"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7123)

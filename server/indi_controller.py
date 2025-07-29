@@ -381,3 +381,23 @@ class IndiTelescopeController(BaseTelescopeController):
 
         self.client.sendNewSwitch(tracking_switch)
         return {"status": "Tracking state set", "state": "on" if state else "off"}
+
+    def get_slew_rate(self):
+        slew_switch = self.device.getSwitch("TELESCOPE_SLEW_RATE")
+        if not slew_switch:
+            raise RuntimeError("TELESCOPE_SLEW_RATE not found")
+
+        available_rates = [item.name for item in slew_switch]
+        current_rate = next((item.name for item in slew_switch if item.s == PyIndi.ISS_ON), None)
+
+        return {"rates": available_rates, "current": current_rate}
+
+    def set_slew_rate(self, rate_name):
+        slew_switch = self.device.getSwitch("TELESCOPE_SLEW_RATE")
+        if not slew_switch:
+            raise RuntimeError("TELESCOPE_SLEW_RATE not found")
+
+        for item in slew_switch:
+            item.s = PyIndi.ISS_ON if item.name == rate_name else PyIndi.ISS_OFF
+
+        self.client.sendNewSwitch(slew_switch)

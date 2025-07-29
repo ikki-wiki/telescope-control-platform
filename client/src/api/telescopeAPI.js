@@ -201,3 +201,22 @@ export async function setTrackingState(state) {
   }
   return res.json();
 }
+
+export async function getSlewRate() {
+  const res = await fetch(`${BASE_URL}/slew-rate`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error("Failed to fetch slew rates");
+  return await res.json(); // { rates: [...], current: "Find" }
+}
+
+export async function setSlewRate(rateName) {
+  const res = await fetch(`${BASE_URL}/slew-rate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rate: rateName }),
+  });
+  if (!res.ok) throw new Error("Failed to set slew rate");
+  return await res.json();
+}

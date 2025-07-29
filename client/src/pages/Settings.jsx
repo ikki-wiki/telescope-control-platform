@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import DateControl from '../components/DateControl';
 import TimeControl from '../components/TimeControl';
+import SlewRateSelector from '../components/SlewRateSelector';
 
 export default function Settings() {
 
@@ -8,6 +9,7 @@ export default function Settings() {
     <div className="flex flex-wrap gap-6 p-6">
       <DateControl />
       <TimeControl />
+      <SlewRateSelector />
     </div>
   );
 }
