@@ -37,7 +37,7 @@ export default function CoordinateSlew() {
   };
 
   return (
-    <section className="p-6 max-w-md">
+    <section className="max-w-md">
 
       {/* Current Position Display */}
       <CurrentTelescopePosition />

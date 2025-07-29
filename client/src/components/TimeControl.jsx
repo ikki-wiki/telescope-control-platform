@@ -24,7 +24,7 @@ export default function TimeControl() {
 
     const updateUTCTime = () => {
       const now = new Date();
-      const utc = now.toISOString().split('T')[1].split('.')[0]; // Extract "HH:MM:SS"
+      const utc = now.toISOString().split('T')[1].split('.')[0];
       setCurrentUTC(utc);
     };
 
@@ -59,20 +59,14 @@ export default function TimeControl() {
   const offsetOptions = Array.from({ length: 29 }, (_, i) => (i - 14).toString());
 
   return (
-    <section className="p-6 max-w-md">
-      <h2 className="text-xl font-semibold mb-4">Set Telescope Time</h2>
+    <section className="w-full">
       <p>
-        Current UTC time: <strong>{currentUTC}</strong>
+        Current telescope time: <strong>{currentTime || 'Loading...'}</strong>{' '}
+        <strong>{offset > 0 ? '+' + offset : offset}</strong>
       </p>
-      <p>
-        Current telescope time: <strong>{currentTime || 'Loading...'}</strong>
-      </p>
-      <p>
-        Current UTC offset: <strong>{offset > 0 ? '+' + offset : offset}</strong>
-      </p>
-      {/* Inputs side by side */}
-      <div className="flex gap-4 mt-4">
-        <div className="flex flex-col">
+
+      <div className="flex flex-col gap-4 mt-4 sm:flex-row">
+        <div className="flex flex-col w-full">
           <label htmlFor="utc-time" className="text-sm font-medium mb-1">
             UTC Time
           </label>
@@ -80,24 +74,24 @@ export default function TimeControl() {
             type="time"
             step={1}
             id="utc-time"
-            className="border rounded-lg px-3 py-2 text-sm w-40"
+            className="border rounded-lg px-3 py-2 text-sm w-full"
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
           />
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex flex-col w-full">
           <label htmlFor="utc-offset" className="text-sm font-medium mb-1">
             UTC Offset
           </label>
           <select
             id="utc-offset"
-            className="border rounded-lg px-3 py-2 text-sm w-40"
+            className="border rounded-lg px-3 py-2 text-sm w-full"
             value={newOffset}
             onChange={(e) => setNewOffset(e.target.value)}
           >
             {offsetOptions.map((offset) => (
-              <option key={offset} value={offset} className='bg-gray-900 text-gray-100'>
+              <option key={offset} value={offset} className="bg-gray-900 text-gray-100">
                 {offset >= 0 ? `+${offset}` : offset}
               </option>
             ))}
@@ -108,7 +102,7 @@ export default function TimeControl() {
       <button
         onClick={handleSubmit}
         disabled={isLoading}
-        className={`mt-4 ${
+        className={`w-full mt-4 ${
           isLoading ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'
         } text-white font-semibold rounded py-2 px-4 transition`}
       >

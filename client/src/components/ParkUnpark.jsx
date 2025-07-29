@@ -45,7 +45,7 @@ export default function ParkUnpark() {
   };
 
   return (
-    <section className="p-6 max-w-md">
+    <section className="max-w-md">
 
       <div className="mb-4">
         <p>

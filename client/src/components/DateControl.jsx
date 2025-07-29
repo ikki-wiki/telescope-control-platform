@@ -37,14 +37,12 @@ export default function DateControl() {
   };
 
   return (
-    <section className="p-6 max-w-md">
-      <h2 className="text-xl font-semibold mb-4">Set Telescope Date</h2>
-
+    <section className="w-full">
       <p className="mb-4">
         Current telescope date: <strong>{currentDate || 'Loading...'}</strong>
       </p>
 
-      <div className="flex flex-col mb-4">
+      <div className="flex flex-col mb-4 w-full">
         <label htmlFor="date" className="text-sm font-medium mb-1">
           New Date
         </label>
@@ -53,14 +51,14 @@ export default function DateControl() {
           id="date"
           value={newDate}
           onChange={(e) => setNewDate(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 text-sm w-60"
+          className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
         />
       </div>
 
       <button
         onClick={handleSubmit}
         disabled={isLoading}
-        className={`${
+        className={`w-full ${
           isLoading ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'
         } text-white font-semibold rounded py-2 px-4 transition`}
       >
@@ -69,3 +67,4 @@ export default function DateControl() {
     </section>
   );
 }
+  

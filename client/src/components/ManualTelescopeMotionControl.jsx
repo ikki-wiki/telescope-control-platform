@@ -40,7 +40,7 @@ export default function TelescopeGamepad() {
   };
 
   return (
-    <div className="p-6 max-w-md">
+    <div className="max-w-md">
 
       {/* Current Position Display */}
       <CurrentTelescopePosition />
@@ -112,7 +112,7 @@ export default function TelescopeGamepad() {
           className={`mt-4 ${
             status.toString().startsWith("Failed") || status.toString().startsWith("Error")
               ? "text-red-600"
-              : "text-green-600"
+              : "text-gray-300"
           } font-medium`}
         >
           {status}

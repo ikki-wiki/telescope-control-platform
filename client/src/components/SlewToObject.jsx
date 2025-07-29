@@ -57,7 +57,7 @@ export default function SlewToObject() {
   };
 
   return (
-    <div className="p-6 max-w-md rounded-lg shadow-sm space-y-4">
+    <div className="max-w-md rounded-lg shadow-sm space-y-4">
       <h2 className="text-lg font-semibold">Slew to Celestial Object</h2>
 
       <input

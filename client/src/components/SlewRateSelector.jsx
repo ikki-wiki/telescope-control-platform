@@ -57,13 +57,13 @@ export default function SlewRateSelector() {
   };
 
   return (
-    <div className="mt-4 p-4">
-      <label className="block font-medium mb-2">Slew Rate:</label>
+    <div className="max-w-md">
+      <label className="block text-sm font-medium mb-1">Slew Rate</label>
       <select
         value={selectedRate}
         onChange={handleChange}
         disabled={loading}
-        className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white"
+        className="w-full p-2 rounded bg-gray-900 text-gray-100 border"
       >
         <option value="" disabled>
           Select a rate
