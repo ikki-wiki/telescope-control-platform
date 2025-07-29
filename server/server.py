@@ -253,6 +253,27 @@ def move_telescope():
     except Exception as e:
         return jsonify({"status": "error", "message": f"Failed to move: {e}"}), 500
 
+@app.route("/api/track-state", methods=["GET"])
+def get_track_state():
+    try:
+        is_tracking = controller.get_tracking_state()
+        return jsonify({"status": "success", "isTracking": is_tracking})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/track-state", methods=["POST"])
+def set_track_state():
+    data = request.get_json()
+    state = data.get("state")
+
+    if state not in [True, False]:
+        return jsonify({"status": "error", "message": "Invalid state"}), 400
+
+    try:
+        controller.set_tracking_state(state)
+        return jsonify({"status": "success", "message": f"Tracking turned {'on' if state == True else 'off'}"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7123)

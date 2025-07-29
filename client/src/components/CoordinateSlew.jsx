@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import CurrentTelescopePosition from './CurrentTelescopePosition'; // import the new component
 import { slewToCoordinates } from '../api/telescopeAPI'; 
+import TrackingSwitch from './TrackingSwitch';
 
 export default function CoordinateSlew() {
   const [ra, setRa] = useState('');
@@ -40,6 +41,7 @@ export default function CoordinateSlew() {
 
       {/* Current Position Display */}
       <CurrentTelescopePosition />
+      <TrackingSwitch />
 
       {/* Slew Input */}
       <div className="flex flex-col gap-4">

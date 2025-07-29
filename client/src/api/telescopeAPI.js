@@ -177,3 +177,27 @@ export async function moveTelescope(direction) {
   }
   return res.json();
 }
+
+export async function getTrackingState() {
+  const res = await fetch(`${BASE_URL}/track-state`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    throw new Error('Failed to fetch tracking state');
+  }
+  const data = await res.json();
+  return data.isTracking; 
+}
+
+export async function setTrackingState(state) {
+  const res = await fetch(`${BASE_URL}/track-state`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ state }),  // was wrong before
+  });
+  if (!res.ok) {
+    throw new Error('Failed to set tracking state');
+  }
+  return res.json();
+}

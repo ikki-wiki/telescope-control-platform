@@ -120,8 +120,8 @@ class IndiTelescopeController(BaseTelescopeController):
             time.sleep(0.5)
             coord_mode=self.device.getSwitch("ON_COORD_SET")
         
-        coord_mode[0].s=PyIndi.ISS_ON  # SLEW
-        coord_mode[1].s=PyIndi.ISS_OFF # TRACK
+        coord_mode[0].s=PyIndi.ISS_OFF  # SLEW
+        coord_mode[1].s=PyIndi.ISS_ON # TRACK
         coord_mode[2].s=PyIndi.ISS_OFF # SYNC
         self.client.sendNewSwitch(coord_mode)
 
@@ -354,3 +354,30 @@ class IndiTelescopeController(BaseTelescopeController):
         new_utc = f"{new_date.strftime('%Y-%m-%d')}T{time_part}"
         date_prop[0].setText(new_utc)
         self.client.sendNewText(date_prop)
+
+    def get_tracking_state(self):
+        """Returns True if telescope tracking is ON, otherwise False."""
+        tracking_switch = self.device.getSwitch("TELESCOPE_TRACK_STATE")
+        if not tracking_switch:
+            raise RuntimeError("TELESCOPE_TRACK_STATE switch not available on device")
+
+        for item in tracking_switch:
+            if item.name == "TRACK_ON":
+                return item.s == PyIndi.ISS_ON
+
+        raise RuntimeError("TRACK_ON not found in TELESCOPE_TRACK_STATE")
+    
+    def set_tracking_state(self, state):
+        """Sets the tracking state of the telescope."""
+        tracking_switch = self.device.getSwitch("TELESCOPE_TRACK_STATE")
+        if not tracking_switch:
+            raise RuntimeError("TELESCOPE_TRACK_STATE switch not available on device")
+
+        for item in tracking_switch:
+            if item.name == "TRACK_ON":
+                item.s = PyIndi.ISS_ON if state else PyIndi.ISS_OFF
+            elif item.name == "TRACK_OFF":
+                item.s = PyIndi.ISS_OFF if state else PyIndi.ISS_ON
+
+        self.client.sendNewSwitch(tracking_switch)
+        return {"status": "Tracking state set", "state": "on" if state else "off"}
