@@ -58,8 +58,6 @@ export default function SlewToObject() {
 
   return (
     <div className="max-w-md rounded-lg shadow-sm space-y-4">
-      <h2 className="text-lg font-semibold">Slew to Celestial Object</h2>
-
       <input
         type="text"
         value={objectName}
@@ -88,19 +86,22 @@ export default function SlewToObject() {
 
       {coordinates && (
         <div className="border border-gray-300 rounded p-4 space-y-2">
-          <p>
-            RA (deg): <strong>{coordinates.ra.toFixed(4)}°</strong>
-          </p>
-          <p>
-            Dec (deg): <strong>{coordinates.dec.toFixed(4)}°</strong>
-          </p>
-          <p>
-            RA (HMS): <strong>{degToHms(coordinates.ra)}</strong>
-          </p>
-          <p>
-            Dec (DMS): <strong>{degToDms(coordinates.dec)}</strong>
-          </p>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <p>
+              RA (deg): <strong>{coordinates.ra.toFixed(4)}°</strong>
+            </p>
+            <p>
+              Dec (deg): <strong>{coordinates.dec.toFixed(4)}°</strong>
+            </p>
+            <p>
+              RA (HMS): <strong>{degToHms(coordinates.ra)}</strong>
+            </p>
+            <p>
+              Dec (DMS): <strong>{degToDms(coordinates.dec)}</strong>
+            </p>
+          </div>
+          
           <button
             onClick={handleSlew}
             disabled={slewing}

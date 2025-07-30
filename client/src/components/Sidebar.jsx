@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Home, Power, GraduationCap, Crosshair, Search, Info, Menu } from 'lucide-react';
+import { Home, Power, GraduationCap, Crosshair, Search, Settings, Menu, Telescope } from 'lucide-react';
 
 export default function Sidebar({ activePage, setActivePage }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const menuItems = [
     { icon: <Home />, label: "Home" },
-    { icon: <Crosshair />, label: "Control" },
-    { icon: <Info />, label: "Settings" },
+    { icon: <Telescope />, label: "Control" },
+    { icon: <Settings />, label: "Settings" },
   ];
 
   return (
