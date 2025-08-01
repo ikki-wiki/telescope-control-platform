@@ -120,9 +120,9 @@ class IndiTelescopeController(BaseTelescopeController):
             time.sleep(0.5)
             coord_mode=self.device.getSwitch("ON_COORD_SET")
         
-        coord_mode[0].s=PyIndi.ISS_OFF  # SLEW
-        coord_mode[1].s=PyIndi.ISS_ON # TRACK
-        coord_mode[2].s=PyIndi.ISS_OFF # SYNC
+        coord_mode[0].s=PyIndi.ISS_OFF  # TRACK
+        coord_mode[1].s=PyIndi.ISS_ON   # SLEW
+        coord_mode[2].s=PyIndi.ISS_OFF  # SYNC
         self.client.sendNewSwitch(coord_mode)
 
         # We set the desired coordinates
@@ -130,17 +130,19 @@ class IndiTelescopeController(BaseTelescopeController):
         while not(telescope_radec):
             time.sleep(0.5)
             telescope_radec=self.device.getNumber("EQUATORIAL_EOD_COORD")
+
         telescope_radec[0].value=ra
         telescope_radec[1].value=dec
         self.client.sendNewNumber(telescope_radec)
+
         # and wait for the scope has finished moving
         while (telescope_radec.getState() == PyIndi.IPS_BUSY):
-            print("Scope Moving ", telescope_radec[0].value, telescope_radec[1].value)
-            print("State:", telescope_radec.getState())
+            self.logger.debug(f"Slewing... RA={telescope_radec[0].value}, Dec={telescope_radec[1].value}")
+            self.logger.debug(f"State: {telescope_radec.getState()}")
             time.sleep(0.5)
 
         print("State:", telescope_radec.getState())
-        self.logger.debug("[SLEW] ON_COORD_SET set to SLEW")
+        self.logger.debug("[SLEW] Slew completed")
         time.sleep(0.5)  # Give INDI a moment to register switch
         return {"status": "Slewing to coordinates", "ra": ra, "dec": dec}
 
@@ -460,3 +462,18 @@ class IndiTelescopeController(BaseTelescopeController):
             item.s = PyIndi.ISS_ON if item.name == rate_name else PyIndi.ISS_OFF
 
         self.client.sendNewSwitch(slew_switch)
+
+    def get_site_coords(self):
+        """Returns the site coordinates of the telescope."""
+        site_coords = self.device.getNumber("GEOGRAPHIC_COORD")
+        if not site_coords:
+            raise RuntimeError("GEOGRAPHIC_COORD not found")
+
+        latitude = next((item.value for item in site_coords if item.name == "LAT"), None)
+        longitude = next((item.value for item in site_coords if item.name == "LONG"), None)
+        elevation = next((item.value for item in site_coords if item.name == "ELEV"), None)
+
+        if latitude is None or longitude is None or elevation is None:
+            raise RuntimeError("Incomplete site coordinates")
+
+        return {"latitude": latitude, "longitude": longitude, "elevation": elevation}

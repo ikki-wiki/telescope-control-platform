@@ -1,15 +1,18 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export async function slewToCoordinates(ra, dec) {
-  const res = await fetch(`${BASE_URL}/slew`, {
+  const response = await fetch(`${BASE_URL}/slew`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ra: ra, dec: dec })
+    body: JSON.stringify({ ra, dec }),
   });
-  if (!res.ok) {
-    throw new Error('Failed to slew telescope');
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to slew telescope');
   }
-  return res.json();
+
+  return response.json(); // or return something if needed
 }
 
 export async function slewToObject(objectName) {

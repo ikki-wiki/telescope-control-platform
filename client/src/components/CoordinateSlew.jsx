@@ -12,6 +12,7 @@ export default function CoordinateSlew() {
   const [decM, setDecM] = useState('');
   const [decS, setDecS] = useState('');
   const [errors, setErrors] = useState({});
+  const [errorMessage, setErrorMessage] = useState(''); // for backend errors
   const [isLoading, setIsLoading] = useState(false);
 
   const raMRef = useRef();
@@ -125,6 +126,7 @@ export default function CoordinateSlew() {
 
   // Submit handler
   const handleSubmit = async () => {
+    setErrorMessage(''); // Clear previous errors
     if (!validate()) return;
 
     const ra = `${pad(raH)}:${pad(raM)}:${pad(raS)}`;
@@ -132,9 +134,10 @@ export default function CoordinateSlew() {
 
     setIsLoading(true);
     try {
-      await slewToCoordinates(ra, dec);
+      const response = await slewToCoordinates(ra, dec);
+      setErrorMessage(''); // clear error on success
     } catch (err) {
-      alert('Failed to slew: ' + err.message);
+      setErrorMessage('Failed to slew: ' + (err.message || err.toString()));
     }
     setIsLoading(false);
   };
@@ -236,6 +239,11 @@ export default function CoordinateSlew() {
             {errors.decD || errors.decM || errors.decS}
           </div>
         </div>
+
+        {/* Backend error message */}
+        {errorMessage && (
+          <div className="text-red-600 font-semibold mt-2">{errorMessage}</div>
+        )}
 
         {/* Submit */}
         <button

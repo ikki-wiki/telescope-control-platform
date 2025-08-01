@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
+from datetime import timezone
 import logging
-from skyfield.api import load
+from skyfield.api import load, wgs84, Star, Angle
 from astroquery.simbad import Simbad
 from astropy.coordinates import SkyCoord
 import astropy.units as u
@@ -15,7 +16,7 @@ CORS(app)
 
 logging.basicConfig(level=logging.DEBUG)
 
-# Load once at startup
+# Load once at startup  
 LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
 controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
@@ -52,6 +53,41 @@ def dms_to_degrees(dms):
     d, m, s = map(float, dms.split(':'))
     return sign * (d + m/60 + s/3600)
 
+from astropy.coordinates import SkyCoord, AltAz, EarthLocation
+from astropy.time import Time
+import astropy.units as u
+
+def is_coordinate_visible(ra_hours, dec_degrees, latitude=32.6605, longitude=-16.9261, elevation_m=168):
+    try:
+        app.logger.debug("Checking coordinate visibility (Astropy method)")
+
+        # 1. Create a SkyCoord for the target
+        target = SkyCoord(ra=ra_hours * u.hourangle, dec=dec_degrees * u.deg, frame='icrs')
+
+        # 2. Define the observer’s Earth location
+        observer_location = EarthLocation(lat=latitude * u.deg, lon=longitude * u.deg, height=elevation_m * u.m)
+
+        # 3. Get current UTC time
+        now = Time.now()
+
+        # 4. Create AltAz frame for observer at current time
+        altaz_frame = AltAz(obstime=now, location=observer_location)
+
+        # 5. Transform target coordinate to AltAz
+        altaz = target.transform_to(altaz_frame)
+
+        alt_deg = altaz.alt.degree
+        az_deg = altaz.az.degree
+
+        app.logger.debug(f"Altitude: {alt_deg:.2f}°, Azimuth: {az_deg:.2f}°")
+
+        # 6. Check if the target is above the horizon
+        return alt_deg > 0
+
+    except Exception as e:
+        app.logger.error(f"Error checking coordinate visibility: {e}", exc_info=True)
+        return False
+
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Telescope control server is running"}), 200
@@ -65,11 +101,19 @@ def slew_to_coordinates():
     try:
         ra = hms_to_hours(ra_str)
         dec = dms_to_degrees(dec_str)
-        print(f"[DEBUG] Slewing to RA={ra}, Dec={dec}")
+
+        latitude = data.get("latitude", 32.6656)  # Default to La Palma
+        longitude = data.get("longitude", -16.9241)  # Default to La Palma
+        elevation = data.get("elevation", 270)  # Default to La Palma
+
+        if not is_coordinate_visible(ra, dec, latitude, longitude, elevation):
+            return jsonify({"error": "Target is below the horizon."}), 400
+
+        app.logger.debug(f"Slewing to RA={ra} hours, Dec={dec} degrees")
         controller.slew_to(ra, dec)
         return jsonify({'message': 'Slew command sent', 'status': 'success'})
     except Exception as e:
-        return jsonify({'message': str(e), 'status': 'error'})
+        return jsonify({'message': str(e), 'status': 'error'}), 500
 
 @app.route("/api/resolve-object", methods=["POST"])
 def resolve_object():
