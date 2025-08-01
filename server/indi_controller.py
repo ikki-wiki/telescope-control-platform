@@ -206,44 +206,103 @@ class IndiTelescopeController(BaseTelescopeController):
         sw = self.device.getSwitch("TELESCOPE_PARK")
         if sw is None:
             raise RuntimeError("Could not get TELESCOPE_PARK property")
-        if sw[0].s == PyIndi.ISS_ON:
-            return "Parked"
-        elif sw[1].s == PyIndi.ISS_ON:
-            return "Unparked"
-        else:
-            return "Unknown"
+
+        for elem in sw:
+            if elem.name == "PARK" and elem.s == PyIndi.ISS_ON:
+                return "Parked"
+            elif elem.name == "UNPARK" and elem.s == PyIndi.ISS_ON:
+                return "Unparked"
+        return "Unknown"
 
     def get_park_position(self):
         prop = self.device.getNumber("TELESCOPE_PARK_POSITION")
         if prop is None:
             raise RuntimeError("TELESCOPE_PARK_POSITION not found")
 
-        ra = prop.getElement("PARK_RA")
-        dec = prop.getElement("PARK_DEC")
+        ra = None
+        dec = None
+
+        if self.device_name == "Telescope Simulator":
+            # Get PARK_HA and PARK_DEC
+            ha = None
+            for elem in prop:
+                if elem.name == "PARK_HA":
+                    ha = elem.value
+                elif elem.name == "PARK_DEC":
+                    dec = elem.value
+
+            if ha is not None:
+                # Convert HA to RA using LST
+                #lst = self.get_sidereal_time()
+                #ra = (lst - ha) % 24
+                ra = ha  # Placeholder for actual RA calculation
+        else:
+            # For real telescopes, use PARK_RA and PARK_DEC
+            for elem in prop:
+                if elem.name == "PARK_RA":
+                    ra = elem.value
+                elif elem.name == "PARK_DEC":
+                    dec = elem.value
 
         if ra is None or dec is None:
-            raise RuntimeError("RA/DEC or AZ/ALT not available")
+            raise ValueError("Park position RA/DEC not available.")
 
-        return {
-            "ra": f"{ra.value:.2f}",
-            "dec": f"{dec.value:.2f}"
-        }
+        return {"ra": ra, "dec": dec}
 
     def set_park_position(self, ra, dec):
         prop = self.device.getNumber("TELESCOPE_PARK_POSITION")
-        if "PARK_RA" in prop:
-            prop["PARK_RA"].value = ra
-            prop["PARK_DEC"].value = dec
-        else:
-            prop["PARK_AZ"].value = ra
-            prop["PARK_ALT"].value = dec
-        self.device.sendNewNumber(prop)
+        if prop is None:
+            raise RuntimeError("TELESCOPE_PARK_POSITION not found")
+
+        has_ra_dec = False
+        has_az_alt = False
+
+        for elem in prop:
+            if elem.name == "PARK_RA":
+                elem.value = ra
+                has_ra_dec = True
+            elif elem.name == "PARK_DEC":
+                elem.value = dec
+                has_ra_dec = True
+            elif elem.name == "PARK_AZ":
+                elem.value = ra
+                has_az_alt = True
+            elif elem.name == "PARK_ALT":
+                elem.value = dec
+                has_az_alt = True
+
+        if not has_ra_dec and not has_az_alt:
+            raise RuntimeError("No recognized park position properties found")
+        
+        print(f"Setting park position: RA={ra}, DEC={dec}")
+
+        self.client.sendNewNumber(prop)
 
     def set_park_option(self, option):
+        if option == "PARK_CURRENT":
+            pos = self.get_coordinates()
+            self.set_park_position(pos["ra"], pos["dec"])
+        elif option == "PARK_DEFAULT":
+            # Replace these values with your actual default
+            self.set_park_position(0, 0)
+
         prop = self.device.getSwitch("TELESCOPE_PARK_OPTION")
-        for key in prop:
-            prop[key].value = (key == option)
-        self.device.sendNewSwitch(prop)
+        if prop is None:
+            raise RuntimeError("TELESCOPE_PARK_OPTION not found")
+
+        print(f"Setting park option: {option}")
+        found = False
+        for elem in prop:
+            if elem.name == option:
+                elem.value = True
+                found = True
+            else:
+                elem.value = False
+
+        if not found:
+            raise ValueError(f"Option '{option}' not found in TELESCOPE_PARK_OPTION")
+
+        self.client.sendNewSwitch(prop)
 
 
     def move(self, direction: str):

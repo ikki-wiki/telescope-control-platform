@@ -1,6 +1,7 @@
 import DateControl from '../components/DateControl';
 import TimeControl from '../components/TimeControl';
 import SlewRateSelector from '../components/SlewRateSelector';
+import ParkPositionManager from '../components/ParkPositionManager';
 
 export default function Settings() {
   return (
@@ -22,6 +23,11 @@ export default function Settings() {
           <h2 className="text-xl font-semibold mb-14">Set slew rate</h2>
           <SlewRateSelector />
         </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Park Position Manager</h2>
+        <ParkPositionManager />
       </div>
     </div>
   );
