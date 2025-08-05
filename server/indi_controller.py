@@ -477,3 +477,27 @@ class IndiTelescopeController(BaseTelescopeController):
             raise RuntimeError("Incomplete site coordinates")
 
         return {"latitude": latitude, "longitude": longitude, "elevation": elevation}
+
+    def set_site_coords(self, latitude, longitude, elevation):
+        """Sets the site coordinates of the telescope."""
+
+        self.logger.info(f"[INDI CONTROLLER] Setting site coordinates: LAT={latitude}, LONG={longitude}, ELEV={elevation}")
+        site_coords = self.device.getNumber("GEOGRAPHIC_COORD")
+        if not site_coords:
+            raise RuntimeError("GEOGRAPHIC_COORD not found")
+
+        self.logger.info(f"[INDI CONTROLLER] Available site coordinates: {[item.name for item in site_coords]}")
+
+        for item in site_coords:
+            if item.name == "LAT":
+                item.value = latitude
+            elif item.name == "LONG":
+                item.value = longitude
+            elif item.name == "ELEV":
+                item.value = elevation
+
+        self.logger.info(f"[INDI CONTROLLER] Items: {[item.name for item in site_coords]}")
+        #self.logger.info(f"[INDI CONTROLLER] Setting site coordinates: LAT={latitude}, LONG={longitude}, ELEV={elevation}")
+
+        self.client.sendNewNumber(site_coords)
+        return {"status": "Site coordinates set", "latitude": latitude, "longitude": longitude, "elevation": elevation}

@@ -339,5 +339,29 @@ def set_slew_rate():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@app.route("/api/site", methods=["GET"])
+def get_site_info():
+    try:
+        site_info = controller.get_site_coords()
+        return jsonify({"status": "success", "site": site_info})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/site", methods=["POST"])
+def set_site_info():
+    data = request.get_json()
+
+    latitude = data.get("latitude", 0.0)
+    longitude = data.get("longitude", 0.0)
+    elevation = data.get("elevation", 0.0)
+
+    app.logger.debug(f"[SERVER] Setting site coordinates: LAT={latitude}, LONG={longitude}, ELEV={elevation}")
+
+    try:
+        controller.set_site_coords(latitude, longitude, elevation)
+        return jsonify({"status": "success", "message": "Site information updated"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7123)

@@ -197,7 +197,7 @@ export async function setTrackingState(state) {
   const res = await fetch(`${BASE_URL}/track-state`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ state }),  // was wrong before
+    body: JSON.stringify({ state }),  
   });
   if (!res.ok) {
     throw new Error('Failed to set tracking state');
@@ -211,7 +211,7 @@ export async function getSlewRate() {
     headers: { "Content-Type": "application/json" },
   });
   if (!res.ok) throw new Error("Failed to fetch slew rates");
-  return await res.json(); // { rates: [...], current: "Find" }
+  return await res.json();
 }
 
 export async function setSlewRate(rateName) {
@@ -221,5 +221,24 @@ export async function setSlewRate(rateName) {
     body: JSON.stringify({ rate: rateName }),
   });
   if (!res.ok) throw new Error("Failed to set slew rate");
+  return await res.json();
+}
+
+export async function getSiteInfo() {
+  const res = await fetch(`${BASE_URL}/site`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error('Failed to fetch site info');
+  return await res.json();
+}
+
+export async function setSiteInfo(site) {
+  const res = await fetch(`${BASE_URL}/site`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(site),
+  });
+  if (!res.ok) throw new Error('Failed to update site info');
   return await res.json();
 }
