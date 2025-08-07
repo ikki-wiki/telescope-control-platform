@@ -5,7 +5,7 @@ import logging
 from indi_client import IndiClient
 
 class IndiTelescopeController(BaseTelescopeController):
-    def __init__(self, host="localhost", port=7624, device_name="LX200 Autostar"):
+    def __init__(self, host="localhost", port=7624, device_name="Telescope Simulator"):
         self.client = IndiClient()
         self.client.setServer(host, port)
         self.device = None
@@ -155,9 +155,9 @@ class IndiTelescopeController(BaseTelescopeController):
             time.sleep(0.5)
             coord_mode=self.device.getSwitch("ON_COORD_SET")
         
-        coord_mode[0].s=PyIndi.ISS_OFF  # SLEW
-        coord_mode[1].s=PyIndi.ISS_OFF  # TRACK
-        coord_mode[2].s=PyIndi.ISS_ON   # SYNC
+        coord_mode[0].s=PyIndi.ISS_OFF  # TRACK
+        coord_mode[1].s=PyIndi.ISS_OFF  # SLEW
+        coord_mode[2].s=PyIndi.ISS_ON    # SYNC
         self.client.sendNewSwitch(coord_mode)
 
         # We set the desired coordinates
@@ -165,19 +165,29 @@ class IndiTelescopeController(BaseTelescopeController):
         while not(telescope_radec):
             time.sleep(0.5)
             telescope_radec=self.device.getNumber("EQUATORIAL_EOD_COORD")
+
         telescope_radec[0].value=ra
         telescope_radec[1].value=dec
         self.client.sendNewNumber(telescope_radec)
+
         # and wait for the scope has finished moving
         while (telescope_radec.getState() == PyIndi.IPS_BUSY):
-            print("Scope Moving ", telescope_radec[0].value, telescope_radec[1].value)
-            print("State:", telescope_radec.getState())
+            self.logger.debug(f"Syncing... RA={telescope_radec[0].value}, Dec={telescope_radec[1].value}")
+            self.logger.debug(f"State: {telescope_radec.getState()}")
             time.sleep(0.5)
 
         print("State:", telescope_radec.getState())
-        self.logger.debug("[SYNC] ON_COORD_SET set to SYNC")
+        self.logger.debug("[SYNC] Sync completed")
         time.sleep(0.5)  # Give INDI a moment to register switch
-        return {"status": "Synced to coordinates", "ra": ra, "dec": dec}
+
+        # Set ON_COORD_SET back to TRACK
+        coord_mode[0].s=PyIndi.ISS_ON    # TRACK
+        coord_mode[1].s=PyIndi.ISS_OFF     # SLEW
+        coord_mode[2].s=PyIndi.ISS_OFF    # SYNC
+        self.client.sendNewSwitch(coord_mode)
+
+        return {"status": "success", "ra": ra, "dec": dec}
+
     
     def abort_motion(self):
         sw = self.device.getSwitch("TELESCOPE_ABORT_MOTION")

@@ -115,6 +115,29 @@ def slew_to_coordinates():
     except Exception as e:
         return jsonify({'message': str(e), 'status': 'error'}), 500
 
+@app.route("/api/sync", methods=["POST"])
+def sync_telescope():
+    data = request.json
+    ra_str = data.get("ra")
+    dec_str = data.get("dec")
+
+    try:
+        ra = hms_to_hours(ra_str)
+        dec = dms_to_degrees(dec_str)
+
+        #latitude = data.get("latitude", 32.6656)  # Default to La Palma
+        #longitude = data.get("longitude", -16.9241)  # Default to La Palma
+        #elevation = data.get("elevation", 270)  # Default to La Palma
+
+        #if not is_coordinate_visible(ra, dec, latitude, longitude, elevation):
+        #    return jsonify({"error": "Target is below the horizon."}), 400
+
+        app.logger.debug(f"Syncing to RA={ra} hours, Dec={dec} degrees")
+        controller.sync_to(ra, dec)
+        return jsonify({'message': 'Sync command sent', 'status': 'success'})
+    except Exception as e:
+        return jsonify({'message': str(e), 'status': 'error'}), 500
+
 @app.route("/api/resolve-object", methods=["POST"])
 def resolve_object():
     try:

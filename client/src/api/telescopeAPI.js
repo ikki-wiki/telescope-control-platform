@@ -15,6 +15,21 @@ export async function slewToCoordinates(ra, dec) {
   return response.json(); // or return something if needed
 }
 
+export async function syncToCoordinates(ra, dec) {
+  const response = await fetch(`${BASE_URL}/sync`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ra, dec }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to sync telescope');
+  }
+
+  return response.json(); // or return something if needed
+}
+
 export async function slewToObject(objectName) {
   const res = await fetch(`${BASE_URL}/slew-object`, {
     method: 'POST',
