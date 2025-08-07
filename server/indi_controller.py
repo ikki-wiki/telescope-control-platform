@@ -180,9 +180,9 @@ class IndiTelescopeController(BaseTelescopeController):
         self.logger.debug("[SYNC] Sync completed")
         time.sleep(0.5)  # Give INDI a moment to register switch
 
-        # Set ON_COORD_SET back to TRACK
-        coord_mode[0].s=PyIndi.ISS_ON    # TRACK
-        coord_mode[1].s=PyIndi.ISS_OFF     # SLEW
+        # Set ON_COORD_SET back to SLEW
+        coord_mode[0].s=PyIndi.ISS_OFF    # TRACK
+        coord_mode[1].s=PyIndi.ISS_ON     # SLEW
         coord_mode[2].s=PyIndi.ISS_OFF    # SYNC
         self.client.sendNewSwitch(coord_mode)
 

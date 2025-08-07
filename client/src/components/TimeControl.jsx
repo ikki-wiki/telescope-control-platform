@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getTime, setTime } from '../api/telescopeAPI';
 
 export default function TimeControl() {
@@ -9,13 +9,49 @@ export default function TimeControl() {
   const [newOffset, setNewOffset] = useState('0');
   const [isLoading, setIsLoading] = useState(false);
 
+  const telescopeDate = useRef(null);
+
+  // Formats a Date object to HH:mm:ss
+  const formatTime = (date) =>
+    date.toISOString().split('T')[1].split('.')[0];
+
+  // Update simulated ticking time
+  useEffect(() => {
+    const tick = setInterval(() => {
+      if (telescopeDate.current) {
+        telescopeDate.current.setSeconds(
+          telescopeDate.current.getSeconds() + 1
+        );
+        setCurrentTime(formatTime(telescopeDate.current));
+      }
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, []);
+
+  // Initial fetch of time and offset
   useEffect(() => {
     const fetchTime = async () => {
       try {
         const info = await getTime();
-        setCurrentTime(info.time);
+        if (info.time) {
+          const [h, m, s] = info.time.split(':').map(Number);
+          const now = new Date();
+          telescopeDate.current = new Date(
+            Date.UTC(
+              now.getUTCFullYear(),
+              now.getUTCMonth(),
+              now.getUTCDate(),
+              h,
+              m,
+              s
+            )
+          );
+          setCurrentTime(formatTime(telescopeDate.current));
+        }
         if (info.offset !== undefined) {
-          setOffset(info.offset.toString());
+          setOffset(info.offset);
+          setNewOffset(info.offset);
         }
       } catch (err) {
         console.error('Failed to fetch time', err);
@@ -30,12 +66,9 @@ export default function TimeControl() {
 
     updateUTCTime();
     fetchTime();
+
     const utc_interval = setInterval(updateUTCTime, 1000);
-    const time_interval = setInterval(fetchTime, 5000);
-    return () => {
-      clearInterval(utc_interval);
-      clearInterval(time_interval);
-    };
+    return () => clearInterval(utc_interval);
   }, []);
 
   const handleSubmit = async () => {
@@ -45,24 +78,38 @@ export default function TimeControl() {
     }
     setIsLoading(true);
     try {
-      await setTime(newTime, newOffset);
-      setCurrentTime(newTime);
+      await setTime(newTime, parseFloat(newOffset).toFixed(2));
+
+      const [h, m, s] = newTime.split(':').map(Number);
+      const now = new Date();
+      telescopeDate.current = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          h,
+          m,
+          s
+        )
+      );
+      setCurrentTime(formatTime(telescopeDate.current));
       setNewTime('');
-      setOffset(newOffset);
-      setNewOffset(newOffset);
+      setOffset(parseFloat(newOffset).toFixed(2));
+      setNewOffset(parseFloat(newOffset).toFixed(2));
     } catch (error) {
       alert('Failed to set time');
     }
     setIsLoading(false);
   };
 
-  const offsetOptions = Array.from({ length: 29 }, (_, i) => (i - 14).toString());
+  // UTC offset options from -14.00 to +14.00 in 0.25 steps
+  const offsetOptions = Array.from({ length: 113 }, (_, i) => (i * 0.25 - 14).toFixed(2));
 
   return (
     <section className="w-full">
       <p>
         Current telescope time: <strong>{currentTime || 'Loading...'}</strong>{' '}
-        <strong>{offset > 0 ? '+' + offset : offset}</strong>
+        {offset !== '' && <strong>{offset > 0 ? `+${offset}` : offset}</strong>}
       </p>
 
       <div className="flex flex-col gap-4 mt-4 sm:flex-row">
