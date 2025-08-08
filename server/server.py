@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Load once at startup  
 LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
-controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
 
 try:
     controller.connect()
@@ -102,12 +102,12 @@ def slew_to_coordinates():
         ra = hms_to_hours(ra_str)
         dec = dms_to_degrees(dec_str)
 
-        latitude = data.get("latitude", 32.6656)  # Default to La Palma
-        longitude = data.get("longitude", -16.9241)  # Default to La Palma
-        elevation = data.get("elevation", 270)  # Default to La Palma
+        #latitude = data.get("latitude", 32.6656)  # Default to La Palma
+        #longitude = data.get("longitude", -16.9241)  # Default to La Palma
+        #elevation = data.get("elevation", 270)  # Default to La Palma
 
-        if not is_coordinate_visible(ra, dec, latitude, longitude, elevation):
-            return jsonify({"error": "Target is below the horizon."}), 400
+        #if not is_coordinate_visible(ra, dec, latitude, longitude, elevation):
+        #    return jsonify({"error": "Target is below the horizon."}), 400
 
         app.logger.debug(f"Slewing to RA={ra} hours, Dec={dec} degrees")
         controller.slew_to(ra, dec)

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import CurrentTelescopePosition from './CurrentTelescopePosition';
 import TrackingSwitch from './TrackingSwitch';
-import { slewToCoordinates, syncToCoordinates } from '../api/telescopeAPI';
+import { getTelescopeCoordinates, slewToCoordinates, syncToCoordinates } from '../api/telescopeAPI';
 
 export default function CoordinateSlew() {
   const [raH, setRaH] = useState('');
@@ -118,6 +118,26 @@ export default function CoordinateSlew() {
     }
   };
 
+  const formatRA = (decimalHours) => {
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.floor((decimalHours - hours) * 60);
+    const seconds = ((decimalHours - hours) * 60 - minutes) * 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toFixed(2).padStart(5, "0")}`;
+  };
+
+  const formatDEC = (decimalDegrees) => {
+    const sign = decimalDegrees >= 0 ? "+" : "-";
+    const absDeg = Math.abs(decimalDegrees);
+    const degrees = Math.floor(absDeg);
+    const minutes = Math.floor((absDeg - degrees) * 60);
+    const seconds = ((absDeg - degrees) * 60 - minutes) * 60;
+    return `${sign}${degrees.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toFixed(2).padStart(5, "0")}`;
+  };
+
   const handleSlew = async () => {
     setShowSlewConfirm(false);
     setMessage('');
@@ -166,10 +186,39 @@ export default function CoordinateSlew() {
     setIsSyncing(false);
   };
 
+  const handleFillInCurrentPosition = async () => {
+    // This function should fill in the current telescope position
+    try {
+      const currentPosition = await getTelescopeCoordinates(); // Assume this function fetches the current position
+      const { ra, dec } = currentPosition;
+      const raHMS = formatRA(ra);
+      const decDMS = formatDEC(dec);
+      parseAndSetRA(raHMS);
+      parseAndSetDec(decDMS);
+    } catch (error) {
+      console.error('Error fetching current position:', error);
+      setErrorMessage('Failed to fetch current position.');
+    }
+  }
+
   return (
     <section className="max-w-md">
       <CurrentTelescopePosition />
       {/*<TrackingSwitch />*/}
+      {/* Fill in with current telescope RA/DEC */}
+      <button
+          type="button"
+          onClick={handleFillInCurrentPosition}
+          disabled={isSyncing || isSlewing}
+          className={`w-full ${
+            isSlewing ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          } text-white font-semibold rounded py-2 transition flex items-center justify-center gap-2`}
+        >
+          {(
+            <span className="" />
+          )}
+          {'Fill in with current telescope RA/DEC'}
+        </button>
 
       <div className="flex flex-col gap-4 mt-4">
         {/* Right Ascension */}
