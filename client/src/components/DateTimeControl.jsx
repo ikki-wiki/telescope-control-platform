@@ -67,15 +67,15 @@ export default function DateTimeControl() {
       
       <div className="flex flex-col gap-4 mt-4 sm:flex-row">
         <div className="flex flex-col w-full">
-          <label htmlFor="date" className="text-sm font-medium mb-1">Date</label>
+          <label htmlFor="date" className="text-sm font-medium mb-1">New date</label>
           <input type="date" id="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-full" />
         </div>
         <div className="flex flex-col w-full">
-          <label htmlFor="time" className="text-sm font-medium mb-1">Time (UTC)</label>
+          <label htmlFor="time" className="text-sm font-medium mb-1">New time (UTC)</label>
           <input type="time" step={1} id="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-full" />
         </div>
         <div className="flex flex-col w-full">
-          <label htmlFor="offset" className="text-sm font-medium mb-1">UTC Offset</label>
+          <label htmlFor="offset" className="text-sm font-medium mb-1">New UTC Offset</label>
           <select id="offset" value={newOffset} onChange={(e) => setNewOffset(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-full">
             {offsetOptions.map((off) => (
               <option key={off} value={off} className="bg-gray-900 text-gray-100">{off >= 0 ? `+${off}` : off}</option>
@@ -89,7 +89,7 @@ export default function DateTimeControl() {
         disabled={isLoading}
         className={`w-full mt-4 ${isLoading ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold rounded py-2 px-4 transition`}
       >
-        {isLoading ? 'Setting...' : 'Set Date and Time'}
+        {isLoading ? 'Saving...' : 'Save date and time'}
       </button>
     </section>
   );

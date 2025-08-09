@@ -405,5 +405,82 @@ def set_site_info():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@app.route("/api/site/selection", methods=["GET"])
+def get_site_selection():
+    try:
+        sites_property = controller.device.getSwitch("Sites")
+        if not sites_property:
+            return jsonify({"status": "error", "message": "Sites property not available"}), 400
+
+        sites = []
+        for item in sites_property:
+            # Assuming items named "Site 1", "Site 2", ...
+            site_id = int(item.name.split()[-1])  # last token like "1"
+            sites.append({"id": site_id, "state": "On" if item.s == PyIndi.ISS_ON else "Off"})
+
+        return jsonify({"status": "success", "sites": sites})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@app.route("/api/site/selection", methods=["POST"])
+def set_site_selection():
+    data = request.get_json()
+    site_id = data.get("siteId")
+    if site_id is None:
+        return jsonify({"status": "error", "message": "siteId is required"}), 400
+
+    try:
+        sites_property = controller.device.getSwitch("Sites")
+        if not sites_property:
+            return jsonify({"status": "error", "message": "Sites property not available"}), 400
+
+        for item in sites_property:
+            # Turn ON the selected site, OFF the others
+            idx = int(item.name.split()[-1])
+            item.s = PyIndi.ISS_ON if idx == site_id else PyIndi.ISS_OFF
+
+        controller.client.sendNewSwitch(sites_property)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@app.route("/api/site/name", methods=["GET"])
+def get_site_name():
+    try:
+        site_name_prop = controller.device.getText("Site Name")
+        if not site_name_prop:
+            return jsonify({"status": "error", "message": "Site Name property not available"}), 400
+
+        for item in site_name_prop:
+            if item.name == "Name":
+                return jsonify({"status": "success", "name": item.text})
+        return jsonify({"status": "error", "message": "Site Name text not found"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@app.route("/api/site/name", methods=["POST"])
+def set_site_name():
+    data = request.get_json()
+    name = data.get("name")
+    if name is None:
+        return jsonify({"status": "error", "message": "name is required"}), 400
+
+    try:
+        site_name_prop = controller.device.getText("Site Name")
+        if not site_name_prop:
+            return jsonify({"status": "error", "message": "Site Name property not available"}), 400
+
+        for item in site_name_prop:
+            if item.name == "Name":
+                item.setText(name)
+                controller.client.sendNewText(site_name_prop)
+                return jsonify({"status": "success"})
+        return jsonify({"status": "error", "message": "Site Name text not found"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7123)

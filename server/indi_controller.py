@@ -526,12 +526,16 @@ class IndiTelescopeController(BaseTelescopeController):
         if not site_coords:
             raise RuntimeError("GEOGRAPHIC_COORD not found")
 
+        self.logger.info(f"[INDI CONTROLLER] Available site coordinates: {[item.name + ' ' + str(item.value) for item in site_coords]}")
+
         latitude = next((item.value for item in site_coords if item.name == "LAT"), None)
         longitude = next((item.value for item in site_coords if item.name == "LONG"), None)
         elevation = next((item.value for item in site_coords if item.name == "ELEV"), None)
 
         if latitude is None or longitude is None or elevation is None:
             raise RuntimeError("Incomplete site coordinates")
+
+        self.logger.info(f"[INDI CONTROLLER] Fetched site coordinates: LAT={latitude}, LONG={longitude}, ELEV={elevation}")
 
         return {"latitude": latitude, "longitude": longitude, "elevation": elevation}
 
@@ -558,3 +562,61 @@ class IndiTelescopeController(BaseTelescopeController):
 
         self.client.sendNewNumber(site_coords)
         return {"status": "Site coordinates set", "latitude": latitude, "longitude": longitude, "elevation": elevation}
+
+    def get_site_selection(self):
+        """Returns current Sites switch vector as list of dicts {id:int, state:str('On'/'Off')}"""
+        sites_prop = self.device.getSwitch("Sites")
+        if not sites_prop:
+            raise RuntimeError("Sites property not found")
+
+        sites = []
+        for item in sites_prop:
+            try:
+                site_id = int(item.name.split()[-1])  # expects "Site 1" etc.
+                state = "On" if item.s == PyIndi.ISS_ON else "Off"
+                sites.append({"id": site_id, "state": state})
+            except Exception:
+                # fallback if naming unexpected
+                sites.append({"id": None, "state": "On" if item.s == PyIndi.ISS_ON else "Off"})
+        return sites
+
+    def set_site_selection(self, site_id):
+        """Sets the given site (1-4) active, others off."""
+        sites_prop = self.device.getSwitch("Sites")
+        if not sites_prop:
+            raise RuntimeError("Sites property not found")
+
+        for item in sites_prop:
+            try:
+                idx = int(item.name.split()[-1])
+                item.s = PyIndi.ISS_ON if idx == site_id else PyIndi.ISS_OFF
+            except Exception:
+                item.s = PyIndi.ISS_OFF
+
+        self.client.sendNewSwitch(sites_prop)
+
+    def get_site_name(self):
+        """Returns the name of the currently active site."""
+        site_name_prop = self.device.getText("Site Name")
+        if not site_name_prop:
+            raise RuntimeError("Site Name property not found")
+
+        for item in site_name_prop:
+            if item.name == "Name":
+                return item.text
+
+        raise RuntimeError("Site Name text element not found")
+
+    def set_site_name(self, name):
+        """Sets the name of the currently active site."""
+        site_name_prop = self.device.getText("Site Name")
+        if not site_name_prop:
+            raise RuntimeError("Site Name property not found")
+
+        for item in site_name_prop:
+            if item.name == "Name":
+                item.setText(name)
+                self.client.sendNewText(site_name_prop)
+                return
+
+        raise RuntimeError("Site Name text element not found")
