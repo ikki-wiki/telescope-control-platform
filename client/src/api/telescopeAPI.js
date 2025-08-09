@@ -54,6 +54,29 @@ export async function resolveObject(objectName) {
   return res.json();
 }
 
+export async function getUTCTime() {
+  const res = await fetch(`${BASE_URL}/time/utc`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    throw new Error('Failed to fetch UTC time');
+  }
+  return res.json();
+}
+
+export async function setUTCTime(utcTime) {
+  const res = await fetch(`${BASE_URL}/time/utc`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date: utcTime.date, time: utcTime.time, offset: utcTime.offset }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to set UTC time');
+  }
+  return res.json();
+}
+
 export async function getDate() {
   const res = await fetch(`${BASE_URL}/date`, {
     method: 'GET',
@@ -99,7 +122,6 @@ export async function setTime(time, offset) {
   }
   return res.json();
 }
-
 
 export async function getTelescopeCoordinates() {
   const res = await fetch(`${BASE_URL}/coordinates`, {

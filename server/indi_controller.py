@@ -3,6 +3,7 @@ import PyIndi
 import time
 import logging
 from indi_client import IndiClient
+from datetime import datetime
 
 class IndiTelescopeController(BaseTelescopeController):
     def __init__(self, host="localhost", port=7624, device_name="Telescope Simulator"):
@@ -352,6 +353,52 @@ class IndiTelescopeController(BaseTelescopeController):
 
         self.client.sendNewSwitch(motion)
         return {"status": f"Telescope moving {direction}"}
+
+
+    def get_utc_time(self):
+        """Returns the current UTC time of the telescope."""
+        utc_prop = self.device.getText("TIME_UTC")
+        if not utc_prop:
+            raise RuntimeError("TIME_UTC property not available on device")
+
+        utc_time = None
+        offset = None
+        
+        for item in utc_prop:
+            if item.getName() == "UTC":
+                utc_time = item.getText()
+            elif item.getName() == "OFFSET":
+                offset = item.getText()
+
+        if not utc_time or offset is None:
+            raise RuntimeError("UTC or OFFSET not found in TIME_UTC")
+
+        date = utc_time.split("T")[0]  # Extract "YYYY-MM-DD"
+        time = utc_time.split("T")[1]  # Extract "HH:MM:SS"
+
+        return date, time, offset
+
+        raise RuntimeError("UTC not found in TIME_UTC")
+
+    def set_utc_time(self, date, time, offset):
+        """Sets the UTC time and offset of the telescope."""
+        self.logger.debug("Setting UTC time and offset")
+
+        utc_prop = self.device.getText("TIME_UTC")
+        if not utc_prop:
+            raise RuntimeError("TIME_UTC property not available on device")
+
+        # Build proper ISO datetime string
+        formatted_utc = f"{date}T{time}"
+        self.logger.debug(f"Formatted UTC: {formatted_utc}, Offset: {offset}")
+
+        for item in utc_prop:
+            if item.getName() == "UTC":
+                item.setText(formatted_utc)
+            elif item.getName() == "OFFSET":
+                item.setText(str(float(offset)))
+
+        self.client.sendNewText(utc_prop)
 
 
     def get_time(self):

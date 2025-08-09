@@ -3,6 +3,7 @@ import TimeControl from '../components/TimeControl';
 import SlewRateSelector from '../components/SlewRateSelector';
 import ParkPositionManager from '../components/ParkPositionManager';
 import SiteInfoManager from '../components/SiteInfoManager';
+import DateTimeControl from '../components/DateTimeControl';
 
 export default function Settings() {
   return (
@@ -10,7 +11,13 @@ export default function Settings() {
       <h1 className="text-2xl font-bold mb-2 mt-2">Telescope Settings</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
         <div className="min-w-[250px] space-y-4">
+          <h2 className="text-xl font-semibold">Set date</h2>
+          <DateTimeControl />
+        </div>
+        
+        {/*<div className="min-w-[250px] space-y-4">
           <h2 className="text-xl font-semibold">Set date</h2>
           <DateControl />
         </div>
@@ -18,7 +25,7 @@ export default function Settings() {
         <div className="min-w-[250px] space-y-4">
           <h2 className="text-xl font-semibold">Set time</h2>
           <TimeControl />
-        </div>
+        </div>*/}
 
         <div className="min-w-[250px] space-y-4">
           <h2 className="text-xl font-semibold mb-14">Set slew rate</h2>

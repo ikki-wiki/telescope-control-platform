@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Load once at startup  
 LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
-controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
 
 try:
     controller.connect()
@@ -245,6 +245,25 @@ def abort():
         return jsonify({"status": "success", "message": "Motion aborted"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/time/utc", methods=["GET"])
+def get_utc_time():
+    try:
+        date, time, offset = controller.get_utc_time()
+        return jsonify({"status": "success", "date": date, "time": time, "offset": offset})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/time/utc", methods=["POST"])
+def set_utc_time():
+    data = request.get_json()
+    app.logger.debug(f"POST /time/utc received: {data}")
+    try:
+        controller.set_utc_time(data["date"], data["time"], data["offset"])
+    except Exception as error:
+        app.logger.error(f"Error in set_utc_time: {error}")
+        return jsonify({"status": "error", "message": str(error)}), 400
+    return jsonify({"status": "success"})
 
 @app.route("/api/time", methods=["GET"])
 def get_time():
