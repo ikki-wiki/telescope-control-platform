@@ -311,3 +311,9 @@ export async function setSiteName(name) {
   if (!res.ok) throw new Error('Failed to set site name');
   return res.json();
 }
+
+export async function loadSavedConfig() {
+  const res = await fetch(`${BASE_URL}/config/load`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+  if (!res.ok) throw new Error('Failed to load saved config');
+  return res.json();
+}

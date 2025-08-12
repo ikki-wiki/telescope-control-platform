@@ -6,7 +6,7 @@ import ParkPositionManager from '../components/ParkPositionManager';
 import SiteInfoManager from '../components/SiteInfoManager';
 import DateTimeControl from '../components/DateTimeControl';
 import SiteSelector from '../components/SiteSelector';
-
+import LoadSavedConfig from '../components/LoadSavedConfig';
 
 export default function Settings() {
   const [activeSiteId, setActiveSiteId] = useState(1);
@@ -35,6 +35,11 @@ export default function Settings() {
           <h2 className="text-xl font-semibold">Site Information</h2>
           <SiteSelector onSiteChange={handleSiteChange} />
           <SiteInfoManager activeSiteId={activeSiteId} />
+        </div>
+
+        <div className="min-w-[250px] space-y-4">
+          <h2 className="text-xl font-semibold">Load Saved Configuration</h2>
+          <LoadSavedConfig />
         </div>
       </div>
     </div>

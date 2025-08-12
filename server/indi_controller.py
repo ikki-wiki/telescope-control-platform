@@ -622,3 +622,32 @@ class IndiTelescopeController(BaseTelescopeController):
                 return
 
         raise RuntimeError("Site Name text element not found")
+
+    def load_config(self):
+        """Loads the telescope configuration and waits until done."""
+        config_process_prop = self.device.getSwitch("CONFIG_PROCESS")
+        if not config_process_prop:
+            raise RuntimeError("Configuration process property not found")
+
+        # Trigger load
+        for item in config_process_prop:
+            if item.name == "CONFIG_LOAD":
+                item.s = PyIndi.ISS_ON
+        self.client.sendNewSwitch(config_process_prop)
+
+        # Wait for driver to process (timeout safety)
+        start_time = time.time()
+        while time.time() - start_time < 5:  # 5-second timeout
+            config_process_prop = self.device.getSwitch("CONFIG_PROCESS")
+            load_switch = next((i for i in config_process_prop if i.name == "CONFIG_LOAD"), None)
+            if load_switch and load_switch.s == PyIndi.ISS_OFF:
+                break
+            time.sleep(0.1)
+
+        # Reset explicitly (in case driver doesn't auto-reset)
+        for item in config_process_prop:
+            if item.name == "CONFIG_LOAD":
+                item.s = PyIndi.ISS_OFF
+        self.client.sendNewSwitch(config_process_prop)
+
+        return {"status": "success"}

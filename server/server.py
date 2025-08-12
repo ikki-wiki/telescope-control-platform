@@ -482,5 +482,13 @@ def set_site_name():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@app.route("/api/config/load", methods=["GET"])
+def load_config():
+    try:
+        controller.load_config()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7123)
