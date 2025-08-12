@@ -97,8 +97,6 @@ export default function SiteInfoManager({ activeSiteId }) {
       }
     };
     fetchSiteInfo();
-    const interval = setInterval(fetchSiteInfo, 10000);
-    return () => clearInterval(interval);
   }, [activeSiteId]);
 
   const handleSubmit = async () => {

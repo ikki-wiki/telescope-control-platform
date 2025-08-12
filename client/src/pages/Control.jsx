@@ -21,9 +21,9 @@ export default function Control() {
           <SlewToObject />
         </div>
 
-        <div className="space-y-4">
+        {/*<div className="space-y-4">
           <AbortMotion />
-        </div>
+        </div>*/}
       </section>
 
       {/* Manual Controls */}

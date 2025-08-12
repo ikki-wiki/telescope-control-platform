@@ -376,9 +376,9 @@ class IndiTelescopeController(BaseTelescopeController):
         date = utc_time.split("T")[0]  # Extract "YYYY-MM-DD"
         time = utc_time.split("T")[1]  # Extract "HH:MM:SS"
 
-        return date, time, offset
+        self.logger.debug(f"Date: {date}, UTC Time: {utc_time}, Offset: {offset}")
 
-        raise RuntimeError("UTC not found in TIME_UTC")
+        return date, time, offset
 
     def set_utc_time(self, date, time, offset):
         """Sets the UTC time and offset of the telescope."""
@@ -397,6 +397,8 @@ class IndiTelescopeController(BaseTelescopeController):
                 item.setText(formatted_utc)
             elif item.getName() == "OFFSET":
                 item.setText(str(float(offset)))
+
+        self.logger.debug(f"Setting UTC time to {formatted_utc} with offset {offset}")
 
         self.client.sendNewText(utc_prop)
 
