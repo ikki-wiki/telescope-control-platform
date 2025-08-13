@@ -5,7 +5,7 @@ export default function ParkUnpark() {
   const [isParked, setIsParked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchParkingStatus = async () => {
+  /*const fetchParkingStatus = async () => {
     try {
       const status = await getTelescopeParkingStatus();
       //setIsParked(status === 'Parked');
@@ -18,14 +18,14 @@ export default function ParkUnpark() {
     fetchParkingStatus();
     const interval = setInterval(fetchParkingStatus, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, []);*/
 
   const handlePark = async () => {
     setIsLoading(true);
     try {
       await parkTelescope();
       setIsParked(true)
-      await fetchParkingStatus();
+      //await fetchParkingStatus();
     } catch (err) {
       alert('Error parking telescope: ' + err.message);
     }
@@ -37,7 +37,7 @@ export default function ParkUnpark() {
     try {
       await unparkTelescope();
       setIsParked(false)
-      await fetchParkingStatus();
+      //await fetchParkingStatus();
     } catch (err) {
       alert('Error unparking telescope: ' + err.message);
     }
@@ -77,14 +77,14 @@ export default function ParkUnpark() {
         <button
           type="button"
           onClick={handleUnpark}
-          disabled={isLoading || !isParked}
+          disabled={isLoading}
           className={`${
-            !isParked || isLoading
+             isLoading
               ? 'bg-gray-500 cursor-not-allowed'
               : 'bg-green-600 hover:bg-green-700'
           } text-white px-4 py-2 rounded font-semibold transition`}
         >
-          {isLoading && !isParked ? 'Unparking...' : 'Unpark'}
+          {isLoading ? 'Unparking...' : 'Unpark'}
         </button>
       </div>
     </section>
