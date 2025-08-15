@@ -129,7 +129,7 @@ export async function getTelescopeCoordinates() {
     headers: { 'Content-Type': 'application/json' }
   });
   const data = await res.json();
-  return data.position;
+  return data;
 }
 
 export async function abortMotion() {

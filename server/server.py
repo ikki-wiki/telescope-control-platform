@@ -421,7 +421,27 @@ def set_date():
 def get_coordinates():
     try:
         position = controller.get_coordinates()
-        return jsonify({"status": "success", "position": position})
+        ra_deg = position["ra"]
+        dec_deg = position["dec"]
+
+        site_coords = controller.get_site_coords()
+        lat = site_coords['latitude']
+        lon = site_coords['longitude']
+        elev = site_coords['elevation']
+
+        loc = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=elev*u.m)
+        now = Time(datetime.now(timezone.utc))
+        sky_coord = SkyCoord(ra=ra_deg*u.deg, dec=dec_deg*u.deg)
+        altaz = sky_coord.transform_to(AltAz(obstime=now, location=loc))
+
+        app.logger.debug(f"Current coordinates: {position}, {altaz.alt.deg}, {altaz.az.deg}")
+
+        return jsonify({
+            "status": "success",
+            "position": position,
+            "alt": altaz.alt.deg,
+            "az": altaz.az.deg
+        })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
