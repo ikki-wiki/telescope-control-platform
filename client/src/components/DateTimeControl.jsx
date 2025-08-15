@@ -65,11 +65,12 @@ export default function DateTimeControl() {
         Current telescope time: <strong>{currentTime || 'Loading...'} {offset > 0 ? `+${offset}` : offset}</strong>
       </p>
       
+      <div className="w-full mt-4">
+        <label htmlFor="date" className="text-sm font-medium mb-1">New date</label>
+        <input type="date" id="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-full" />
+      </div>
+
       <div className="flex flex-col gap-4 mt-4 sm:flex-row">
-        <div className="flex flex-col w-full">
-          <label htmlFor="date" className="text-sm font-medium mb-1">New date</label>
-          <input type="date" id="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-full" />
-        </div>
         <div className="flex flex-col w-full">
           <label htmlFor="time" className="text-sm font-medium mb-1">New time (UTC)</label>
           <input type="time" step={1} id="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-full" />

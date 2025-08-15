@@ -22,6 +22,12 @@ export default function Settings() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <div className="min-w-[250px] space-y-4">
+          <h2 className="text-xl font-semibold">Site Information</h2>
+          <SiteSelector onSiteChange={handleSiteChange} />
+          <SiteInfoManager activeSiteId={activeSiteId} />
+        </div>
+
+        <div className="min-w-[250px] space-y-4">
           <h2 className="text-xl font-semibold">Date and time</h2>
           <DateTimeControl />
         </div>
@@ -31,16 +37,10 @@ export default function Settings() {
           <SlewRateSelector />
         </div>
 
-        <div className="min-w-[250px] space-y-4">
-          <h2 className="text-xl font-semibold">Site Information</h2>
-          <SiteSelector onSiteChange={handleSiteChange} />
-          <SiteInfoManager activeSiteId={activeSiteId} />
-        </div>
-
-        <div className="min-w-[250px] space-y-4">
+        {/*<div className="min-w-[250px] space-y-4">
           <h2 className="text-xl font-semibold">Load Saved Configuration</h2>
           <LoadSavedConfig />
-        </div>
+        </div>*/}
       </div>
     </div>
   );
