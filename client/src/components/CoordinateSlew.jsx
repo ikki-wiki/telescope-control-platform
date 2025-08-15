@@ -152,9 +152,11 @@ export default function CoordinateSlew() {
     try {
       const result = await slewToCoordinates(ra, dec);
       if (result.status === 'success') {
-        setMessage('Slew successful.');
+          setMessage(result.message || 'Slew successful.');
+          setErrorMessage('');
       } else {
-        setErrorMessage('Slew failed.');
+          setErrorMessage(result.message || 'Slew failed.');
+          setMessage('');
       }
     } catch (err) {
       setErrorMessage('Error while slewing: ' + (err.message || err.toString()));

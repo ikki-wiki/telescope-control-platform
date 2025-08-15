@@ -528,8 +528,6 @@ class IndiTelescopeController(BaseTelescopeController):
         if not site_coords:
             raise RuntimeError("GEOGRAPHIC_COORD not found")
 
-        self.logger.info(f"[INDI CONTROLLER] Available site coordinates: {[item.name + ' ' + str(item.value) for item in site_coords]}")
-
         latitude = next((item.value for item in site_coords if item.name == "LAT"), None)
         longitude = next((item.value for item in site_coords if item.name == "LONG"), None)
         elevation = next((item.value for item in site_coords if item.name == "ELEV"), None)
@@ -537,7 +535,7 @@ class IndiTelescopeController(BaseTelescopeController):
         if latitude is None or longitude is None or elevation is None:
             raise RuntimeError("Incomplete site coordinates")
 
-        self.logger.info(f"[INDI CONTROLLER] Fetched site coordinates: LAT={latitude}, LONG={longitude}, ELEV={elevation}")
+        self.logger.info(f"Fetched site coordinates: LAT={latitude}, LONG={longitude}, ELEV={elevation}")
 
         return {"latitude": latitude, "longitude": longitude, "elevation": elevation}
 

@@ -1,12 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 import logging
 from skyfield.api import load, wgs84, Star, Angle
 from astroquery.simbad import Simbad
 from astropy.time import Time
-from astropy.coordinates import SkyCoord, EarthLocation
+from astropy.coordinates import SkyCoord, AltAz, EarthLocation
 import astropy.units as u
 import json
 from pathlib import Path
@@ -57,11 +56,34 @@ def dms_to_degrees(dms):
     d, m, s = map(float, dms.split(':'))
     return sign * (d + m/60 + s/3600)
 
-from astropy.coordinates import SkyCoord, AltAz, EarthLocation
-from astropy.time import Time
-import astropy.units as u
+def normalize_longitude(lon):
+    """Convert longitude from 0–360 range to –180–180."""
+    if lon > 180:
+        lon -= 360
+    return lon
 
-def is_coordinate_visible(ra_hours, dec_degrees, latitude=32.6605, longitude=-16.9261, elevation_m=168):
+def get_altitude(ra_hours, dec_degrees, lat_deg, lon_deg):
+    # Create target sky coordinate
+    target = SkyCoord(ra=ra_hours * u.hour, dec=dec_degrees * u.deg, frame='icrs')
+    app.logger.debug(f"Target coordinates: RA={ra_hours} hours, Dec={dec_degrees} degrees")
+
+    # Observer's location
+    location = EarthLocation(lat=lat_deg * u.deg, lon=lon_deg * u.deg)
+    app.logger.debug(f"Observer's location: Lat={lat_deg}°, Lon={lon_deg}°")
+
+    # Current UTC time
+    now = Time(datetime.now(timezone.utc))
+    app.logger.debug(f"Current UTC time: {now}")
+
+    # Convert to Alt/Az
+    altaz_frame = AltAz(obstime=now, location=location)
+    app.logger.debug("Creating AltAz frame for transformation")
+    target_altaz = target.transform_to(altaz_frame)
+    app.logger.debug(f"Transformed AltAz coordinates: Altitude={target_altaz.alt.degree}°, Azimuth={target_altaz.az.degree}°")
+
+    return target_altaz.alt.degree
+
+'''def is_coordinate_visible(ra_hours, dec_degrees, latitude=32.6605, longitude=-16.9261, elevation_m=168):
     try:
         app.logger.debug("Checking coordinate visibility (Astropy method)")
 
@@ -91,7 +113,7 @@ def is_coordinate_visible(ra_hours, dec_degrees, latitude=32.6605, longitude=-16
     except Exception as e:
         app.logger.error(f"Error checking coordinate visibility: {e}", exc_info=True)
         return False
-
+'''
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Telescope control server is running"}), 200
@@ -106,18 +128,43 @@ def slew_to_coordinates():
         ra = hms_to_hours(ra_str)
         dec = dms_to_degrees(dec_str)
 
-        #latitude = data.get("latitude", 32.6656)  # Default to La Palma
-        #longitude = data.get("longitude", -16.9241)  # Default to La Palma
-        #elevation = data.get("elevation", 270)  # Default to La Palma
+        site_coords = controller.get_site_coords()
+        lat = site_coords['latitude']
+        long = site_coords['longitude']
+        elev = site_coords['elevation']
+        app.logger.debug(f"Saved Observer's location: Lat={lat}°, Lon={long}°, Elevation={elev}m")
 
-        #if not is_coordinate_visible(ra, dec, latitude, longitude, elevation):
-        #    return jsonify({"error": "Target is below the horizon."}), 400
+        alt = get_altitude(ra, dec, lat, normalize_longitude(long))
+        app.logger.debug(f"Calculated altitude: {alt}°")
 
-        app.logger.debug(f"Slewing to RA={ra} hours, Dec={dec} degrees")
+        # Rule #1: Check if target is above horizon
+        if alt > 0:
+            app.logger.info("✅ Above horizon")
+        else:
+            app.logger.info("❌ Below horizon")
+            return jsonify({'message': "Target is below the horizon", 'status': 'error'}), 200  # 200 so the message is shown correctly in the interface
+
+        # Rule #2: Check if target is above Low-altitude atmospheric distortion
+        min_alt = 15  # degrees
+        if alt >= min_alt:
+            app.logger.info(f"✅ Above {min_alt}° altitude limit")
+        else:
+            app.logger.info(f"⚠ Target is above horizon but below {min_alt}° — low visibility")
+
+        # Rule #3: Check if target is below maximum physical altitude
+        max_alt = 85  # degrees
+        if alt <= max_alt:
+            app.logger.info(f"✅ Below {max_alt}° altitude limit")
+        else:
+            app.logger.info(f"⚠ Target is above {max_alt}° — potential obstruction")
+            return jsonify({'message': "Target is above maximum altitude", 'status': 'error'}), 200 # 200 so the message is shown correctly in the interface
+
         controller.slew_to(ra, dec)
+        app.logger.debug(f"Slewing to RA={ra} hours, Dec={dec} degrees")
+
         return jsonify({'message': 'Slew command sent', 'status': 'success'})
     except Exception as e:
-        return jsonify({'message': str(e), 'status': 'error'}), 500
+        return jsonify({'message': str(e), 'status': 'error'}), 400
 
 @app.route("/api/sync", methods=["POST"])
 def sync_telescope():
