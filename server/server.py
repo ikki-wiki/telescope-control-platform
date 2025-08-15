@@ -162,7 +162,7 @@ def slew_to_coordinates():
         controller.slew_to(ra, dec)
         app.logger.debug(f"Slewing to RA={ra} hours, Dec={dec} degrees")
 
-        return jsonify({'message': 'Slew command sent', 'status': 'success'})
+        return jsonify({'message': 'Slew successfully', 'status': 'success'})
     except Exception as e:
         return jsonify({'message': str(e), 'status': 'error'}), 400
 

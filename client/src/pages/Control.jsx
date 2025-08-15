@@ -16,29 +16,34 @@ export default function Control() {
           <CoordinateSlew />
         </div>
 
-        <div className="space-y-4">
+        {/*<div className="space-y-4">
           <h2 className="text-xl font-semibold mb-4">Slew to Object</h2>
           <SlewToObject />
         </div>
 
-        {/*<div className="space-y-4">
+        <div className="space-y-4">
           <AbortMotion />
         </div>*/}
-      </section>
 
-      {/* Manual Controls */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold mb-4">Manual Telescope Motion Control</h2>
-        <ManualTelescopeMotionControl />
-      </section>
-
-      {/* Park Management */}
-      <section className="space-y-4">
+        {/* Manual Controls */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Park / Unpark Telescope</h2>
-          <ParkUnpark />
+          <h2 className="text-xl font-semibold mb-4">Manual Telescope Motion Control</h2>
+          <ManualTelescopeMotionControl />
         </div>
+
+        {/* Park Management */}
+        <div className="space-y-4">
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold mb-4">Park / Unpark Telescope</h2>
+            <ParkUnpark />
+          </div>
+        </div>
+
       </section>
+
+      
+
+      
     </div>
   );
 }

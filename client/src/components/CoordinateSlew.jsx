@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import CurrentTelescopePosition from './CurrentTelescopePosition';
 import TrackingSwitch from './TrackingSwitch';
-import { getTelescopeCoordinates, slewToCoordinates, syncToCoordinates } from '../api/telescopeAPI';
+import { getTelescopeCoordinates, slewToCoordinates, syncToCoordinates, resolveObject } from '../api/telescopeAPI';
 
 export default function CoordinateSlew() {
   const [raH, setRaH] = useState('');
@@ -18,6 +18,7 @@ export default function CoordinateSlew() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [showSlewConfirm, setShowSlewConfirm] = useState(false);
   const [showSyncConfirm, setShowSyncConfirm] = useState(false);
+  const [objectName, setObjectName] = useState('');
 
   const raMRef = useRef();
   const raSRef = useRef();
@@ -189,9 +190,8 @@ export default function CoordinateSlew() {
   };
 
   const handleFillInCurrentPosition = async () => {
-    // This function should fill in the current telescope position
     try {
-      const currentPosition = await getTelescopeCoordinates(); // Assume this function fetches the current position
+      const currentPosition = await getTelescopeCoordinates(); 
       const { ra, dec } = currentPosition;
       const raHMS = formatRA(ra);
       const decDMS = formatDEC(dec);
@@ -203,23 +203,48 @@ export default function CoordinateSlew() {
     }
   }
 
+  const handleResolveObject = async (objectName) => {
+    try {
+      const result = await resolveObject(objectName);
+      if (result.status === 'success') {
+        const { ra, dec } = result;
+        const raHMS = formatRA(ra / 15);
+        const decDMS = formatDEC(dec);
+        parseAndSetRA(raHMS);
+        parseAndSetDec(decDMS);
+      } else {
+        setErrorMessage(result.message || 'Failed to resolve object.');
+      }
+    } catch (error) {
+      console.error('Error resolving object:', error);
+      setErrorMessage('Failed to resolve object.');
+    }
+  };
+
   return (
     <section className="max-w-md">
       <CurrentTelescopePosition />
       {/*<TrackingSwitch />*/}
-      {/* Fill in with current telescope RA/DEC */}
-      <button
-          type="button"
-          onClick={handleFillInCurrentPosition}
-          disabled={isSyncing || isSlewing}
-          className={`w-full ${
-            isSlewing ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-          } text-white font-semibold rounded py-2 transition flex items-center justify-center gap-2`}
+
+      {/* Resolve Object */}
+        <input
+          type="text"
+          value={objectName}
+          onChange={(e) => setObjectName(e.target.value)}
+          placeholder="Enter object name (e.g. Vega, Jupiter, M42)"
+          className="border border-gray-300 rounded px-3 py-2 mb-4 w-full"
+        />
+
+        <button
+          onClick={() => handleResolveObject(objectName)}
+          disabled={!objectName}
+          className={`w-full py-2 rounded font-semibold text-white transition ${
+            !objectName
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
-          {(
-            <span className="" />
-          )}
-          {'Fill in with current telescope RA/DEC'}
+          {'Get Coordinates'}
         </button>
 
       <div className="flex flex-col gap-4 mt-4">
@@ -315,14 +340,38 @@ export default function CoordinateSlew() {
           </div>
         </div>
 
-        {errorMessage && (
-          <div className="text-red-600 font-semibold mt-2">{errorMessage}</div>
-        )}
+        <div className='grid grid-cols-2 gap-6'>
+          {/* Fill in with current telescope RA/DEC */}
+          <button
+            type="button"
+            onClick={handleFillInCurrentPosition}
+            disabled={isSyncing || isSlewing}
+            className={`w-full ${
+              isSlewing ? 'bg-gray-500 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'
+            } text-white font-semibold rounded py-2 transition flex items-center justify-center gap-2`}
+          >
+            {(
+              <span className="" />
+            )}
+            {'Fill in with current telescope RA/DEC'}
+          </button>
 
-        {message && (
-          <div className="text-green-600 font-semibold mt-2">{message}</div>
-        )}
-
+          {/* Sync Button */}
+          <button
+            type="button"
+            onClick={() => setShowSyncConfirm(true)}
+            disabled={isSlewing || isSyncing}
+            className={`w-full ${
+              isSyncing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+            } text-white font-semibold rounded py-2 transition flex items-center justify-center gap-2`}
+          >
+            {isSyncing && (
+              <span className="spinner-border animate-spin inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full" />
+            )}
+            {isSyncing ? 'Syncing...' : 'Sync to coordinates'}
+          </button>
+        </div> 
+        
         {/* Slew Button */}
         <button
           type="button"
@@ -338,20 +387,13 @@ export default function CoordinateSlew() {
           {isSlewing ? 'Slewing...' : 'Slew to coordinates'}
         </button>
 
-        {/* Sync Button */}
-        <button
-          type="button"
-          onClick={() => setShowSyncConfirm(true)}
-          disabled={isSlewing || isSyncing}
-          className={`w-full ${
-            isSyncing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
-          } text-white font-semibold rounded py-2 transition flex items-center justify-center gap-2`}
-        >
-          {isSyncing && (
-            <span className="spinner-border animate-spin inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full" />
-          )}
-          {isSyncing ? 'Syncing...' : 'Sync to coordinates'}
-        </button>
+        {errorMessage && (
+          <div className="text-red-600 font-semibold mt-2">{errorMessage}</div>
+        )}
+
+        {message && (
+          <div className="text-green-600 font-semibold mt-2">{message}</div>
+        )}
 
         {/* Slew Confirmation Modal */}
         {showSlewConfirm && (
