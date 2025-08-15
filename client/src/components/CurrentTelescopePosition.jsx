@@ -16,6 +16,22 @@ export default function CurrentTelescopePosition() {
     }
   };
 
+  const rawRAtoHMS = (rawRA) => {
+    const totalSeconds = Math.floor(rawRA * 3600);
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  const rawDECtoDMS = (rawDec) => {
+    const totalSeconds = Math.floor(rawDec * 3600);
+    const degrees = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    return `${degrees}º ${minutes}' ${seconds}"`;
+  };
+
   useEffect(() => {
     fetchCurrentPosition();
     const interval = setInterval(fetchCurrentPosition, 1000);
@@ -38,7 +54,7 @@ export default function CurrentTelescopePosition() {
               transition={{ duration: 0.3 }}
               className="font-mono"
             >
-              {currentRa}
+              {rawRAtoHMS(currentRa)}
             </motion.span>
           </AnimatePresence>
         </div>
@@ -53,7 +69,7 @@ export default function CurrentTelescopePosition() {
               transition={{ duration: 0.3 }}
               className="font-mono"
             >
-              {currentDec}
+              {rawDECtoDMS(currentDec)}
             </motion.span>
           </AnimatePresence>
         </div>
