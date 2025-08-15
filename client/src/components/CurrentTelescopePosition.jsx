@@ -21,7 +21,7 @@ export default function CurrentTelescopePosition() {
   };
 
   const rawRAtoHMS = (rawRA) => {
-    const totalSeconds = Math.floor((rawRA / 15) * 3600); // divide by 15 first
+    const totalSeconds = Math.floor(rawRA * 3600);
     const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
     const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
     const seconds = String(totalSeconds % 60).padStart(2, '0');

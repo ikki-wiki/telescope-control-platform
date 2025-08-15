@@ -191,10 +191,10 @@ export default function CoordinateSlew() {
 
   const handleFillInCurrentPosition = async () => {
     try {
-      const currentPosition = await getTelescopeCoordinates(); 
-      const { ra, dec } = currentPosition;
-      const raHMS = formatRA(ra);
-      const decDMS = formatDEC(dec);
+      const currentPosition = await getTelescopeCoordinates();
+      const { position, alt, az } = currentPosition;
+      const raHMS = formatRA(position.ra);
+      const decDMS = formatDEC(position.dec);
       parseAndSetRA(raHMS);
       parseAndSetDec(decDMS);
     } catch (error) {
