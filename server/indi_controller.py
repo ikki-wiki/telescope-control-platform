@@ -121,8 +121,8 @@ class IndiTelescopeController(BaseTelescopeController):
             time.sleep(0.5)
             coord_mode=self.device.getSwitch("ON_COORD_SET")
         
-        coord_mode[0].s=PyIndi.ISS_OFF  # TRACK
-        coord_mode[1].s=PyIndi.ISS_ON   # SLEW
+        coord_mode[0].s=PyIndi.ISS_ON  # TRACK
+        coord_mode[1].s=PyIndi.ISS_OFF   # SLEW
         coord_mode[2].s=PyIndi.ISS_OFF  # SYNC
         self.client.sendNewSwitch(coord_mode)
 

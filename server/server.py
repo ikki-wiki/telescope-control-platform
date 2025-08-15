@@ -5,11 +5,15 @@ from datetime import timezone
 import logging
 from skyfield.api import load, wgs84, Star, Angle
 from astroquery.simbad import Simbad
-from astropy.coordinates import SkyCoord
+from astropy.time import Time
+from astropy.coordinates import SkyCoord, EarthLocation
 import astropy.units as u
 import json
 from pathlib import Path
 from indi_controller import IndiTelescopeController
+from astropy.utils import iers
+iers.conf.auto_download = False
+iers.conf.auto_max_age = None
 
 app = Flask(__name__)
 CORS(app)
@@ -19,7 +23,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Load once at startup  
 LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
-controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
 
 try:
     controller.connect()
@@ -209,10 +213,61 @@ def park():
 @app.route("/api/unpark", methods=["POST"])
 def unpark():
     try:
+        # --- CONFIG: your site & reference ---
+        lat = 32.65
+        lon = -16.92   # west negative
+        elev = 0
+        dec_park = 57.349722222
+        ra_ref_str = "18:29:57.0"    # This is RA=18.4991666... in HH:MM:SS
+        utc_ref_str = "2025-08-14 11:10:20"  # exact UTC when you
+
+        loc = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=elev*u.m)
+
+        # Reference time & RA
+        t_ref = Time(utc_ref_str, scale='utc', location=loc)
+        ra_ref_hours = SkyCoord(ra_ref_str, dec_park*u.deg,
+                                unit=(u.hourangle, u.deg)).ra.hour
+        lst_ref = t_ref.sidereal_time('apparent').hour
+        ha_ref = (lst_ref - ra_ref_hours) % 24
+
+        # Get mount's UTC
+        date, time, offset = controller.get_utc_time()
+        utc_time_string = f"{date} {time}"
+        t_now = Time(utc_time_string, scale='utc', location=loc)
+        lst_now = t_now.sidereal_time('apparent').hour
+
+        # RA for today
+        ra_now = (lst_now - ha_ref) % 24
+        coord_now = SkyCoord(ra=ra_now*u.hour, dec=dec_park*u.deg, frame='icrs')
+
+        app.logger.info(f"Calculated park RA/DEC: "
+                        f"{coord_now.ra.to_string(unit=u.hour, sep=':')}, "
+                        f"{coord_now.dec.to_string(unit=u.deg, sep=':')}")
+
+        # --- Unpark first
         controller.unpark()
-        return jsonify({"status": "success", "message": "Telescope unparked"})
+
+        # --- Sync after unpark
+        controller.sync_to(coord_now.ra.hour, coord_now.dec.degree)
+
+        # Verify it ‘stuck’
+        pos = controller.get_coordinates()
+        ra_report = float(pos['ra'])
+        dec_report = float(pos['dec'])
+        if abs(ra_report - coord_now.ra.hour) > 0.01:
+            app.logger.error(f"SYNC mismatch! Wanted {coord_now.ra.hour},{coord_now.dec.degree}, got {ra_report},{dec_report}")
+
+        return jsonify({
+            "status": "success",
+            "message": "Unparked and synced to park position",
+            "ra": coord_now.ra.to_string(unit=u.hour, sep=':'),
+            "dec": coord_now.dec.to_string(unit=u.deg, sep=':')
+        })
+
     except Exception as e:
+        app.logger.exception("Error in unpark()")
         return jsonify({"status": "error", "message": str(e)}), 400
+
 
 @app.route("/api/parking-status", methods=["GET"])
 def parking_status():
