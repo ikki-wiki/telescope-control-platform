@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
+import toast from 'react-hot-toast';
 import CurrentTelescopePosition from './CurrentTelescopePosition';
-import TrackingSwitch from './TrackingSwitch';
 import { getTelescopeCoordinates, slewToCoordinates, syncToCoordinates, resolveObject } from '../api/telescopeAPI';
 
 export default function CoordinateSlew() {
@@ -12,8 +12,6 @@ export default function CoordinateSlew() {
   const [decM, setDecM] = useState('');
   const [decS, setDecS] = useState('');
   const [errors, setErrors] = useState({});
-  const [errorMessage, setErrorMessage] = useState('');
-  const [message, setMessage] = useState('');
   const [isSlewing, setIsSlewing] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showSlewConfirm, setShowSlewConfirm] = useState(false);
@@ -44,6 +42,7 @@ export default function CoordinateSlew() {
     if (isNaN(ds) || ds < 0 || ds >= 60) errs.decS = 'SS must be 0–59.999';
 
     setErrors(errs);
+    if (Object.keys(errs).length > 0) toast.error('Invalid coordinate input');
     return Object.keys(errs).length === 0;
   };
 
@@ -57,9 +56,7 @@ export default function CoordinateSlew() {
   };
 
   const autoAdvance = (val, maxLen, nextRef) => {
-    if (val.length >= maxLen && nextRef?.current) {
-      nextRef.current.focus();
-    }
+    if (val.length >= maxLen && nextRef?.current) nextRef.current.focus();
   };
 
   const parseAndSetRA = (str) => {
@@ -103,43 +100,19 @@ export default function CoordinateSlew() {
     }
   };
 
-  const handleRaPaste = (e) => {
-    e.preventDefault();
-    const paste = e.clipboardData.getData('text');
-    if (paste.includes(':')) {
-      parseAndSetRA(paste);
-    }
-  };
-
-  const handleDecPaste = (e) => {
-    e.preventDefault();
-    const paste = e.clipboardData.getData('text');
-    if (paste.includes(':')) {
-      parseAndSetDec(paste);
-    }
-  };
+  const handleRaPaste = (e) => { e.preventDefault(); parseAndSetRA(e.clipboardData.getData('text')); };
+  const handleDecPaste = (e) => { e.preventDefault(); parseAndSetDec(e.clipboardData.getData('text')); };
 
   const formatRA = (decimalHours) => {
     let hours = Math.floor(decimalHours);
     let minutes = Math.floor((decimalHours - hours) * 60);
     let seconds = ((decimalHours - hours) * 60 - minutes) * 60;
 
-    // normalize overflow
-    if (seconds >= 59.995) {  // account for floating point
-      seconds = 0;
-      minutes += 1;
-    }
-    if (minutes >= 60) {
-      minutes = 0;
-      hours += 1;
-    }
-    if (hours >= 24) {
-      hours = 0; // wrap around (RA is circular)
-    }
+    if (seconds >= 59.995) { seconds = 0; minutes += 1; }
+    if (minutes >= 60) { minutes = 0; hours += 1; }
+    if (hours >= 24) { hours = 0; }
 
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toFixed(2).padStart(5, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toFixed(2).padStart(5, "0")}`;
   };
 
   const formatDEC = (decimalDegrees) => {
@@ -149,133 +122,105 @@ export default function CoordinateSlew() {
     let minutes = Math.floor((absDeg - degrees) * 60);
     let seconds = ((absDeg - degrees) * 60 - minutes) * 60;
 
-    // normalize overflow
-    if (seconds >= 59.995) {
-      seconds = 0;
-      minutes += 1;
-    }
-    if (minutes >= 60) {
-      minutes = 0;
-      degrees += 1;
-    }
-    if (degrees > 90) { 
-      degrees = 90; 
-      minutes = 0; 
-      seconds = 0; // clamp at pole
-    }
+    if (seconds >= 59.995) { seconds = 0; minutes += 1; }
+    if (minutes >= 60) { minutes = 0; degrees += 1; }
+    if (degrees > 90) { degrees = 90; minutes = 0; seconds = 0; }
 
-    return `${sign}${degrees.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toFixed(2).padStart(5, "0")}`;
+    return `${sign}${degrees.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toFixed(2).padStart(5, "0")}`;
   };
 
   const handleSlew = async () => {
     setShowSlewConfirm(false);
-    setMessage('');
-    setErrorMessage('');
-
     if (!validate()) return;
 
     const ra = `${pad(raH)}:${pad(raM)}:${pad(raS)}`;
     const dec = `${decSign}${pad(decD)}:${pad(decM)}:${pad(decS)}`;
 
     setIsSlewing(true);
+    const toastId = toast.loading('Slewing...');
+
     try {
       const result = await slewToCoordinates(ra, dec);
       if (result.status === 'success') {
-          setMessage(result.message || 'Slew successful.');
-          setErrorMessage('');
+        toast.success(result.message || 'Slew successful!', { id: toastId });
       } else {
-          setErrorMessage(result.message || 'Slew failed.');
-          setMessage('');
+        toast.error(result.message || 'Slew failed!', { id: toastId });
       }
     } catch (err) {
-      setErrorMessage('Error while slewing: ' + (err.message || err.toString()));
+      toast.error('Error while slewing: ' + (err.message || err.toString()), { id: toastId });
     }
     setIsSlewing(false);
   };
 
   const handleSync = async () => {
     setShowSyncConfirm(false);
-    setMessage('');
-    setErrorMessage('');
-
     if (!validate()) return;
 
     const ra = `${pad(raH)}:${pad(raM)}:${pad(raS)}`;
     const dec = `${decSign}${pad(decD)}:${pad(decM)}:${pad(decS)}`;
 
     setIsSyncing(true);
+    const toastId = toast.loading('Syncing...');
+
     try {
       const result = await syncToCoordinates(ra, dec);
       if (result.status === 'success') {
-        setMessage('Sync successful.');
+        toast.success('Sync successful!', { id: toastId });
       } else {
-        setErrorMessage('Sync failed.');
+        toast.error('Sync failed!', { id: toastId });
       }
     } catch (err) {
-      setErrorMessage('Error while syncing: ' + (err.message || err.toString()));
+      toast.error('Error while syncing: ' + (err.message || err.toString()), { id: toastId });
     }
     setIsSyncing(false);
   };
 
   const handleFillInCurrentPosition = async () => {
     try {
-      const currentPosition = await getTelescopeCoordinates();
-      const { position, alt, az } = currentPosition;
-      const raHMS = formatRA(position.ra);
-      const decDMS = formatDEC(position.dec);
-      parseAndSetRA(raHMS);
-      parseAndSetDec(decDMS);
+      const { position } = await getTelescopeCoordinates();
+      parseAndSetRA(formatRA(position.ra));
+      parseAndSetDec(formatDEC(position.dec));
+      toast.success('Current telescope position loaded');
     } catch (error) {
-      console.error('Error fetching current position:', error);
-      setErrorMessage('Failed to fetch current position.');
+      console.error(error);
+      toast.error('Failed to fetch current position');
     }
-  }
+  };
 
-  const handleResolveObject = async (objectName) => {
+  const handleResolveObject = async (name) => {
     try {
-      const result = await resolveObject(objectName);
+      const result = await resolveObject(name);
       if (result.status === 'success') {
-        const { ra, dec } = result;
-        const raHMS = formatRA(ra / 15);
-        const decDMS = formatDEC(dec);
-        parseAndSetRA(raHMS);
-        parseAndSetDec(decDMS);
-      } else {
-        setErrorMessage(result.message || 'Failed to resolve object.');
-      }
+        parseAndSetRA(formatRA(result.ra / 15));
+        parseAndSetDec(formatDEC(result.dec));
+        toast.success('Object coordinates loaded');
+      } else toast.error(result.message || 'Failed to resolve object');
     } catch (error) {
-      console.error('Error resolving object:', error);
-      setErrorMessage('Failed to resolve object.');
+      console.error(error);
+      toast.error('Failed to resolve object');
     }
   };
 
   return (
     <section className="max-w-md">
       <CurrentTelescopePosition />
-      {/*<TrackingSwitch />*/}
 
-      {/* Resolve Object */}
-        <input
-          type="text"
-          value={objectName}
-          onChange={(e) => setObjectName(e.target.value)}
-          placeholder="Enter object name (e.g. Vega, Jupiter, M42)"
-          className="border border-gray-300 rounded px-3 py-2 mb-4 w-full"
-        />
-
-        <button
-          onClick={() => handleResolveObject(objectName)}
-          disabled={!objectName}
-          className={`w-full py-2 rounded font-semibold text-white transition ${
-            !objectName
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          {'Get Coordinates'}
-        </button>
+      <input
+        type="text"
+        value={objectName}
+        onChange={(e) => setObjectName(e.target.value)}
+        placeholder="Enter object name (e.g. Vega, Jupiter, M42)"
+        className="border border-gray-300 rounded px-3 py-2 mb-4 w-full"
+      />
+      <button
+        onClick={() => handleResolveObject(objectName)}
+        disabled={!objectName}
+        className={`w-full py-2 rounded font-semibold text-white transition ${
+          !objectName ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+        }`}
+      >
+        {'Get Coordinates'}
+      </button>
 
       <div className="flex flex-col gap-4 mt-4">
         {/* Right Ascension */}
@@ -416,14 +361,6 @@ export default function CoordinateSlew() {
           )}
           {isSlewing ? 'Slewing...' : 'Slew to coordinates'}
         </button>
-
-        {errorMessage && (
-          <div className="text-red-400 font-semibold mt-2 text-center">{errorMessage}</div>
-        )}
-
-        {message && (
-          <div className="text-green-400 font-semibold mt-2 text-center">{message}</div>
-        )}
 
         {/* Slew Confirmation Modal */}
         {showSlewConfirm && (

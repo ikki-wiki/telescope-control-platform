@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Toaster } from 'react-hot-toast'; // <-- import Toaster
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Control from './pages/Control';
@@ -24,6 +25,9 @@ function App() {
       <main className="flex-1 p-6 overflow-auto">
         {renderContent()}
       </main>
+
+      {/* Toast notifications */}
+      <Toaster position="top-right" reverseOrder={false} />
     </div>
   );
 }
