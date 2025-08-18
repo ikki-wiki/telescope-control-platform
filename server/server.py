@@ -22,6 +22,8 @@ logging.basicConfig(level=logging.DEBUG)
 # Load once at startup  
 LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
+Simbad.TIMEOUT = 20  # optional: increase timeout
+
 controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
 
 try:
@@ -65,7 +67,7 @@ def normalize_longitude(lon):
 def get_altaz(ra_hours, dec_degrees, lat_deg, lon_deg):
     # Create target sky coordinate
     target = SkyCoord(ra=ra_hours * u.hour, dec=dec_degrees * u.deg, frame='icrs')
-    app.logger.debug(f"Target coordinates: RA={ra_hours} hours, Dec={dec_degrees} degrees")
+    #app.logger.debug(f"Target coordinates: RA={ra_hours} hours, Dec={dec_degrees} degrees")
 
     # Observer's location
     location = EarthLocation(lat=lat_deg * u.deg, lon=lon_deg * u.deg)
@@ -79,7 +81,7 @@ def get_altaz(ra_hours, dec_degrees, lat_deg, lon_deg):
     altaz_frame = AltAz(obstime=now, location=location)
     #app.logger.debug("Creating AltAz frame for transformation")
     target_altaz = target.transform_to(altaz_frame)
-    app.logger.debug(f"Transformed AltAz coordinates: Altitude={target_altaz.alt.degree}°, Azimuth={target_altaz.az.degree}°")
+    #app.logger.debug(f"Transformed AltAz coordinates: Altitude={target_altaz.alt.degree}°, Azimuth={target_altaz.az.degree}°")
 
     return { "altitude": target_altaz.alt.degree, "azimuth": target_altaz.az.degree }
 
@@ -163,29 +165,29 @@ def resolve_object():
     try:
         data = request.get_json()
         object_name = data.get("object", "").strip()
+        app.logger.debug(f"Resolving object: {object_name}")
         if not object_name:
             return jsonify({"status": "error", "message": "Object name is required"}), 400
 
-        object_lower = object_name.lower()
         ra_deg = dec_deg = None
 
-        # Option 1: Planet via Skyfield
-        if object_lower in planets:
+        # Planet check
+        if object_name.lower() in planets:
             t = ts.now()
-            obj = planets[object_lower]
+            obj = planets[object_name.lower()]
             astrometric = ephemeris['earth'].at(t).observe(obj).apparent()
             ra, dec, _ = astrometric.radec()
             ra_deg = ra.hours * 15
             dec_deg = dec.degrees
 
-        # Option 2: Local catalog
+        # Local catalog check
         else:
-            match = next((o for o in LOCAL_CATALOG if o["name"].lower() == object_lower), None)
+            match = next((o for o in LOCAL_CATALOG if o["name"].lower() == object_name.lower()), None)
             if match:
-                print(f"[DEBUG] Found local match for {object_name}: {match}")
+                app.logger.debug(f"Found local match for {object_name}: {match}")
                 if match.get("type") == "planet":
                     t = ts.now()
-                    obj = planets[object_lower]
+                    obj = planets[object_name.lower()]
                     astrometric = ephemeris['earth'].at(t).observe(obj).apparent()
                     ra, dec, _ = astrometric.radec()
                     ra_deg = ra.hours * 15
@@ -194,19 +196,28 @@ def resolve_object():
                     ra_deg = match["ra"]
                     dec_deg = match["dec"]
 
-            # Option 3 (optional): Simbad online fallback
+            # Simbad online fallback
             else:
                 try:
-                    result = Simbad.query_object(object_name)
-                    if result is None:
-                        return jsonify({"status": "error", "message": f"Object '{object_name}' not found"}), 404
-                    ra_str = result["RA"][0]
-                    dec_str = result["DEC"][0]
-                    coord = SkyCoord(f"{ra_str} {dec_str}", unit=(u.hourangle, u.deg))
-                    ra_deg = coord.ra.degree
-                    dec_deg = coord.dec.degree
-                except Exception:
-                    return jsonify({"status": "error", "message": f"Object '{object_name}' not found locally and no internet available."}), 404
+                    custom_simbad = Simbad()
+                    custom_simbad.TIMEOUT = 20
+                    custom_simbad.reset_votable_fields()
+                    custom_simbad.add_votable_fields("ra", "dec")  # request decimal degrees
+
+                    result = custom_simbad.query_object(object_name)
+                    if result is None or len(result) == 0:
+                        return jsonify({"status": "error", "message": f"Object '{object_name}' not found"}), 200
+
+                    # Handle column names robustly
+                    ra_col = "RA" if "RA" in result.colnames else "ra"
+                    dec_col = "DEC" if "DEC" in result.colnames else "dec"
+
+                    ra_deg = float(result[ra_col][0])
+                    dec_deg = float(result[dec_col][0])
+
+                except Exception as e:
+                    app.logger.error(f"Simbad query failed: {e}")
+                    return jsonify({"status": "error", "message": f"Object '{object_name}' not found locally and no internet available."}), 200
 
         return jsonify({
             "status": "success",
@@ -216,6 +227,7 @@ def resolve_object():
         })
 
     except Exception as e:
+        app.logger.error(f"Error resolving object: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/api/park", methods=["POST"])
@@ -400,7 +412,7 @@ def get_coordinates():
 
         alt_az = get_altaz(ra, dec, lat, lon)
 
-        app.logger.debug(f"Current coordinates: {position}, Alt: {alt_az['altitude']}, Az: {alt_az['azimuth']}")
+        #app.logger.debug(f"Current coordinates: {position}, Alt: {alt_az['altitude']}, Az: {alt_az['azimuth']}")
 
         return jsonify({
             "status": "success",

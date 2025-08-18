@@ -535,7 +535,7 @@ class IndiTelescopeController(BaseTelescopeController):
         if latitude is None or longitude is None or elevation is None:
             raise RuntimeError("Incomplete site coordinates")
 
-        self.logger.info(f"Fetched site coordinates: LAT={latitude}, LONG={longitude}, ELEV={elevation}")
+        #self.logger.info(f"Fetched site coordinates: LAT={latitude}, LONG={longitude}, ELEV={elevation}")
 
         return {"latitude": latitude, "longitude": longitude, "elevation": elevation}
 
