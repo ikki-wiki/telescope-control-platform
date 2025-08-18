@@ -120,9 +120,23 @@ export default function CoordinateSlew() {
   };
 
   const formatRA = (decimalHours) => {
-    const hours = Math.floor(decimalHours);
-    const minutes = Math.floor((decimalHours - hours) * 60);
-    const seconds = ((decimalHours - hours) * 60 - minutes) * 60;
+    let hours = Math.floor(decimalHours);
+    let minutes = Math.floor((decimalHours - hours) * 60);
+    let seconds = ((decimalHours - hours) * 60 - minutes) * 60;
+
+    // normalize overflow
+    if (seconds >= 59.995) {  // account for floating point
+      seconds = 0;
+      minutes += 1;
+    }
+    if (minutes >= 60) {
+      minutes = 0;
+      hours += 1;
+    }
+    if (hours >= 24) {
+      hours = 0; // wrap around (RA is circular)
+    }
+
     return `${hours.toString().padStart(2, "0")}:${minutes
       .toString()
       .padStart(2, "0")}:${seconds.toFixed(2).padStart(5, "0")}`;
@@ -131,9 +145,25 @@ export default function CoordinateSlew() {
   const formatDEC = (decimalDegrees) => {
     const sign = decimalDegrees >= 0 ? "+" : "-";
     const absDeg = Math.abs(decimalDegrees);
-    const degrees = Math.floor(absDeg);
-    const minutes = Math.floor((absDeg - degrees) * 60);
-    const seconds = ((absDeg - degrees) * 60 - minutes) * 60;
+    let degrees = Math.floor(absDeg);
+    let minutes = Math.floor((absDeg - degrees) * 60);
+    let seconds = ((absDeg - degrees) * 60 - minutes) * 60;
+
+    // normalize overflow
+    if (seconds >= 59.995) {
+      seconds = 0;
+      minutes += 1;
+    }
+    if (minutes >= 60) {
+      minutes = 0;
+      degrees += 1;
+    }
+    if (degrees > 90) { 
+      degrees = 90; 
+      minutes = 0; 
+      seconds = 0; // clamp at pole
+    }
+
     return `${sign}${degrees.toString().padStart(2, "0")}:${minutes
       .toString()
       .padStart(2, "0")}:${seconds.toFixed(2).padStart(5, "0")}`;
@@ -362,7 +392,7 @@ export default function CoordinateSlew() {
             onClick={() => setShowSyncConfirm(true)}
             disabled={isSlewing || isSyncing}
             className={`w-full ${
-              isSyncing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+              isSlewing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
             } text-white font-semibold rounded py-2 transition flex items-center justify-center gap-2`}
           >
             {isSyncing && (
