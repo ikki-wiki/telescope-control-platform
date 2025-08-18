@@ -33,7 +33,16 @@ export default function CurrentTelescopePosition() {
     const degrees = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
     const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
     const seconds = String(totalSeconds % 60).padStart(2, '0');
-    return `${degrees}º ${minutes}' ${seconds}"`;
+    return `${degrees}° ${minutes}' ${seconds}"`;
+  };
+
+  const formatAlt = (alt) => {
+    const sign = alt >= 0 ? '+' : '-';
+    return `${sign}${Math.abs(alt).toFixed(1)}°`;
+  };
+
+  const formatAz = (az) => {
+    return `${az.toFixed(1)}°`;
   };
 
   useEffect(() => {
@@ -48,7 +57,7 @@ export default function CurrentTelescopePosition() {
 
       <div className="space-y-1">
         <div>
-          <span className="text-neutral-400">RA (HMS):</span>{' '}
+          <span className="text-neutral-400">RA:</span>{' '}
           <AnimatePresence mode="wait">
             <motion.span
               key={currentRa}
@@ -63,7 +72,7 @@ export default function CurrentTelescopePosition() {
           </AnimatePresence>
         </div>
         <div>
-          <span className="text-neutral-400">DEC (DMS):</span>{' '}
+          <span className="text-neutral-400">DEC:</span>{' '}
           <AnimatePresence mode="wait">
             <motion.span
               key={currentDec}
@@ -88,7 +97,7 @@ export default function CurrentTelescopePosition() {
               transition={{ duration: 0.3 }}
               className="font-mono"
             >
-              {currentAlt}
+              {formatAlt(Number(currentAlt))}
             </motion.span>
           </AnimatePresence>
         </div>
@@ -103,7 +112,7 @@ export default function CurrentTelescopePosition() {
               transition={{ duration: 0.3 }}
               className="font-mono"
             >
-              {currentAz}
+              {formatAz(Number(currentAz))}
             </motion.span>
           </AnimatePresence>
         </div>

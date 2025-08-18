@@ -280,7 +280,7 @@ export default function CoordinateSlew() {
       <div className="flex flex-col gap-4 mt-4">
         {/* Right Ascension */}
         <div>
-          <span className="font-medium block mb-1">Right Ascension (HH:MM:SS.S)</span>
+          <span className="font-medium block mb-1">Right Ascension (HH:MM:SS.SS)</span>
           <div className="flex gap-2">
             <input
               type="text"
@@ -321,7 +321,7 @@ export default function CoordinateSlew() {
 
         {/* Declination */}
         <div>
-          <span className="font-medium block mb-1">Declination (+/-DD:MM:SS.S)</span>
+          <span className="font-medium block mb-1">Declination (+/-DD° MM' SS.SS")</span>
           <div className="flex gap-2">
             <select
               value={decSign}
@@ -418,11 +418,11 @@ export default function CoordinateSlew() {
         </button>
 
         {errorMessage && (
-          <div className="text-red-600 font-semibold mt-2">{errorMessage}</div>
+          <div className="text-red-400 font-semibold mt-2 text-center">{errorMessage}</div>
         )}
 
         {message && (
-          <div className="text-green-600 font-semibold mt-2">{message}</div>
+          <div className="text-green-400 font-semibold mt-2 text-center">{message}</div>
         )}
 
         {/* Slew Confirmation Modal */}
@@ -434,7 +434,7 @@ export default function CoordinateSlew() {
                 Are you sure you want to slew to:<br /></p>
               <p className="mb-6">
                 <strong>RA:</strong> {raH}:{raM}:{raS}<br />
-                <strong>DEC:</strong> {decSign}{decD}º {decM}' {decS}""
+                <strong>DEC:</strong> {decSign}{decD}° {decM}' {decS}""
               </p>
               <div className="flex justify-between gap-3">
                 <button
@@ -462,7 +462,7 @@ export default function CoordinateSlew() {
               <p className="mb-4">Are you sure you want to sync the telescope to these coordinates?</p>
               <p className="mb-6">
                 <strong>RA:</strong> {raH}:{raM}:{raS}<br />
-                <strong>DEC:</strong> {decSign}{decD}º {decM}' {decS}""
+                <strong>DEC:</strong> {decSign}{decD}° {decM}' {decS}""
               </p>
               <div className="flex justify-between gap-3">
                 <button

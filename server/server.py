@@ -62,58 +62,27 @@ def normalize_longitude(lon):
         lon -= 360
     return lon
 
-def get_altitude(ra_hours, dec_degrees, lat_deg, lon_deg):
+def get_altaz(ra_hours, dec_degrees, lat_deg, lon_deg):
     # Create target sky coordinate
     target = SkyCoord(ra=ra_hours * u.hour, dec=dec_degrees * u.deg, frame='icrs')
     app.logger.debug(f"Target coordinates: RA={ra_hours} hours, Dec={dec_degrees} degrees")
 
     # Observer's location
     location = EarthLocation(lat=lat_deg * u.deg, lon=lon_deg * u.deg)
-    app.logger.debug(f"Observer's location: Lat={lat_deg}°, Lon={lon_deg}°")
+    #app.logger.debug(f"Observer's location: Lat={lat_deg}°, Lon={lon_deg}°")
 
     # Current UTC time
     now = Time(datetime.now(timezone.utc))
-    app.logger.debug(f"Current UTC time: {now}")
+    #app.logger.debug(f"Current UTC time: {now}")
 
     # Convert to Alt/Az
     altaz_frame = AltAz(obstime=now, location=location)
-    app.logger.debug("Creating AltAz frame for transformation")
+    #app.logger.debug("Creating AltAz frame for transformation")
     target_altaz = target.transform_to(altaz_frame)
     app.logger.debug(f"Transformed AltAz coordinates: Altitude={target_altaz.alt.degree}°, Azimuth={target_altaz.az.degree}°")
 
-    return target_altaz.alt.degree
+    return { "altitude": target_altaz.alt.degree, "azimuth": target_altaz.az.degree }
 
-'''def is_coordinate_visible(ra_hours, dec_degrees, latitude=32.6605, longitude=-16.9261, elevation_m=168):
-    try:
-        app.logger.debug("Checking coordinate visibility (Astropy method)")
-
-        # 1. Create a SkyCoord for the target
-        target = SkyCoord(ra=ra_hours * u.hourangle, dec=dec_degrees * u.deg, frame='icrs')
-
-        # 2. Define the observer’s Earth location
-        observer_location = EarthLocation(lat=latitude * u.deg, lon=longitude * u.deg, height=elevation_m * u.m)
-
-        # 3. Get current UTC time
-        now = Time.now()
-
-        # 4. Create AltAz frame for observer at current time
-        altaz_frame = AltAz(obstime=now, location=observer_location)
-
-        # 5. Transform target coordinate to AltAz
-        altaz = target.transform_to(altaz_frame)
-
-        alt_deg = altaz.alt.degree
-        az_deg = altaz.az.degree
-
-        app.logger.debug(f"Altitude: {alt_deg:.2f}°, Azimuth: {az_deg:.2f}°")
-
-        # 6. Check if the target is above the horizon
-        return alt_deg > 0
-
-    except Exception as e:
-        app.logger.error(f"Error checking coordinate visibility: {e}", exc_info=True)
-        return False
-'''
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Telescope control server is running"}), 200
@@ -134,11 +103,11 @@ def slew_to_coordinates():
         elev = site_coords['elevation']
         app.logger.debug(f"Saved Observer's location: Lat={lat}°, Lon={long}°, Elevation={elev}m")
 
-        alt = get_altitude(ra, dec, lat, normalize_longitude(long))
-        app.logger.debug(f"Calculated altitude: {alt}°")
+        alt_az = get_altaz(ra, dec, lat, normalize_longitude(long))
+        app.logger.debug(f"Calculated altitude: {alt_az['altitude']}°, Azimuth: {alt_az['azimuth']}°")
 
         # Rule #1: Check if target is above horizon
-        if alt > 0:
+        if alt_az['altitude'] > 0:
             app.logger.info("✅ Above horizon")
         else:
             app.logger.info("❌ Below horizon")
@@ -146,14 +115,14 @@ def slew_to_coordinates():
 
         # Rule #2: Check if target is above Low-altitude atmospheric distortion
         min_alt = 15  # degrees
-        if alt >= min_alt:
+        if alt_az['altitude'] >= min_alt:
             app.logger.info(f"✅ Above {min_alt}° altitude limit")
         else:
             app.logger.info(f"⚠ Target is above horizon but below {min_alt}° — low visibility")
 
         # Rule #3: Check if target is below maximum physical altitude
         max_alt = 85  # degrees
-        if alt <= max_alt:
+        if alt_az['altitude'] <= max_alt:
             app.logger.info(f"✅ Below {max_alt}° altitude limit")
         else:
             app.logger.info(f"⚠ Target is above {max_alt}° — potential obstruction")
@@ -421,26 +390,23 @@ def set_date():
 def get_coordinates():
     try:
         position = controller.get_coordinates()
-        ra_deg = position["ra"]
-        dec_deg = position["dec"]
+        ra = position["ra"]
+        dec = position["dec"]
 
         site_coords = controller.get_site_coords()
         lat = site_coords['latitude']
         lon = site_coords['longitude']
         elev = site_coords['elevation']
 
-        loc = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=elev*u.m)
-        now = Time(datetime.now(timezone.utc))
-        sky_coord = SkyCoord(ra=ra_deg*u.deg, dec=dec_deg*u.deg)
-        altaz = sky_coord.transform_to(AltAz(obstime=now, location=loc))
+        alt_az = get_altaz(ra, dec, lat, lon)
 
-        app.logger.debug(f"Current coordinates: {position}, {altaz.alt.deg}, {altaz.az.deg}")
+        app.logger.debug(f"Current coordinates: {position}, Alt: {alt_az['altitude']}, Az: {alt_az['azimuth']}")
 
         return jsonify({
             "status": "success",
             "position": position,
-            "alt": altaz.alt.deg,
-            "az": altaz.az.deg
+            "alt": alt_az['altitude'],
+            "az": alt_az['azimuth']
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
