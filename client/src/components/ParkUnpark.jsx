@@ -1,61 +1,48 @@
-import { useState, useEffect } from 'react';
-import { parkTelescope, unparkTelescope, getTelescopeParkingStatus } from '../api/telescopeAPI';
+import { useState } from "react";
+import { parkTelescope, unparkTelescope } from "../api/telescopeAPI";
+import { toast } from "react-hot-toast";
 
 export default function ParkUnpark() {
   const [isParked, setIsParked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  /*const fetchParkingStatus = async () => {
-    try {
-      const status = await getTelescopeParkingStatus();
-      //setIsParked(status === 'Parked');
-    } catch (err) {
-      console.error('Failed to get parking status:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchParkingStatus();
-    const interval = setInterval(fetchParkingStatus, 5000);
-    return () => clearInterval(interval);
-  }, []);*/
-
   const handlePark = async () => {
     setIsLoading(true);
+    const toastId = toast.loading("Parking telescope...");
     try {
       await parkTelescope();
-      setIsParked(true)
-      //await fetchParkingStatus();
+      setIsParked(true);
+      toast.success("Telescope parked", { id: toastId });
     } catch (err) {
-      alert('Error parking telescope: ' + err.message);
+      toast.error("Error parking telescope: " + err.message, { id: toastId });
     }
     setIsLoading(false);
   };
 
   const handleUnpark = async () => {
     setIsLoading(true);
+    const toastId = toast.loading("Unparking telescope...");
     try {
       await unparkTelescope();
-      setIsParked(false)
-      //await fetchParkingStatus();
+      setIsParked(false);
+      toast.success("Telescope unparked", { id: toastId });
     } catch (err) {
-      alert('Error unparking telescope: ' + err.message);
+      toast.error("Error unparking telescope: " + err.message, { id: toastId });
     }
     setIsLoading(false);
   };
 
   return (
     <section className="max-w-md">
-
       <div className="mb-4">
         <p>
-          Status:{' '}
+          Status:{" "}
           <span
             className={`font-mono font-bold ${
-              isParked ? 'text-green-500' : 'text-yellow-400'
+              isParked ? "text-green-500" : "text-yellow-400"
             }`}
           >
-            {isParked ? 'Parked' : 'Unparked'}
+            {isParked ? "Parked" : "Unparked"}
           </span>
         </p>
       </div>
@@ -67,24 +54,24 @@ export default function ParkUnpark() {
           disabled={isLoading || isParked}
           className={`${
             isParked || isLoading
-              ? 'bg-gray-500 cursor-not-allowed'
-              : 'bg-red-600 hover:bg-red-700'
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700"
           } text-white px-4 py-2 rounded font-semibold transition`}
         >
-          {isLoading && isParked ? 'Parking...' : 'Park'}
+          Park
         </button>
 
         <button
           type="button"
           onClick={handleUnpark}
-          disabled={isLoading}
+          disabled={isLoading || !isParked}
           className={`${
-             isLoading
-              ? 'bg-gray-500 cursor-not-allowed'
-              : 'bg-green-600 hover:bg-green-700'
+            isLoading || !isParked
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
           } text-white px-4 py-2 rounded font-semibold transition`}
         >
-          {isLoading ? 'Unparking...' : 'Unpark'}
+          Unpark
         </button>
       </div>
     </section>
