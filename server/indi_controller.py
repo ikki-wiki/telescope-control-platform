@@ -578,6 +578,7 @@ class IndiTelescopeController(BaseTelescopeController):
             except Exception:
                 # fallback if naming unexpected
                 sites.append({"id": None, "state": "On" if item.s == PyIndi.ISS_ON else "Off"})
+        self.logger.info(f"[INDI CONTROLLER] Sites: {sites}")
         return sites
 
     def set_site_selection(self, site_id):

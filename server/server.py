@@ -24,7 +24,7 @@ LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
 Simbad.TIMEOUT = 20  # optional: increase timeout
 
-controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
 
 try:
     controller.connect()
@@ -508,17 +508,9 @@ def set_site_info():
 @app.route("/api/site/selection", methods=["GET"])
 def get_site_selection():
     try:
-        sites_property = controller.device.getSwitch("Sites")
-        if not sites_property:
-            return jsonify({"status": "error", "message": "Sites property not available"}), 400
-
-        sites = []
-        for item in sites_property:
-            # Assuming items named "Site 1", "Site 2", ...
-            site_id = int(item.name.split()[-1])  # last token like "1"
-            sites.append({"id": site_id, "state": "On" if item.s == PyIndi.ISS_ON else "Off"})
-
-        return jsonify({"status": "success", "sites": sites})
+        sites = controller.get_site_selection()
+        app.logger.info(f"Sites: {sites}")
+        return jsonify({"status": "success", "sites": sites}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
@@ -531,17 +523,9 @@ def set_site_selection():
         return jsonify({"status": "error", "message": "siteId is required"}), 400
 
     try:
-        sites_property = controller.device.getSwitch("Sites")
-        if not sites_property:
-            return jsonify({"status": "error", "message": "Sites property not available"}), 400
-
-        for item in sites_property:
-            # Turn ON the selected site, OFF the others
-            idx = int(item.name.split()[-1])
-            item.s = PyIndi.ISS_ON if idx == site_id else PyIndi.ISS_OFF
-
-        controller.client.sendNewSwitch(sites_property)
-        return jsonify({"status": "success"})
+        controller.set_site_selection(site_id)
+        app.logger.info(f"Selected site to set: {site_id}")
+        return jsonify({"status": "success"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
@@ -549,14 +533,11 @@ def set_site_selection():
 @app.route("/api/site/name", methods=["GET"])
 def get_site_name():
     try:
-        site_name_prop = controller.device.getText("Site Name")
-        if not site_name_prop:
+        site_name = controller.get_site_name()
+        if not site_name:
             return jsonify({"status": "error", "message": "Site Name property not available"}), 400
 
-        for item in site_name_prop:
-            if item.name == "Name":
-                return jsonify({"status": "success", "name": item.text})
-        return jsonify({"status": "error", "message": "Site Name text not found"}), 400
+        return jsonify({"status": "success", "name": site_name}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
@@ -566,19 +547,12 @@ def set_site_name():
     data = request.get_json()
     name = data.get("name")
     if name is None:
-        return jsonify({"status": "error", "message": "name is required"}), 400
+        return jsonify({"status": "error", "message": "Name is required"}), 400
 
     try:
-        site_name_prop = controller.device.getText("Site Name")
-        if not site_name_prop:
-            return jsonify({"status": "error", "message": "Site Name property not available"}), 400
-
-        for item in site_name_prop:
-            if item.name == "Name":
-                item.setText(name)
-                controller.client.sendNewText(site_name_prop)
-                return jsonify({"status": "success"})
-        return jsonify({"status": "error", "message": "Site Name text not found"}), 400
+        controller.set_site_name(name)
+        app.logger.info(f"New site name: {name}")
+        return jsonify({"status": "success"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
