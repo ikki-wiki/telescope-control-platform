@@ -204,7 +204,6 @@ class IndiTelescopeController(BaseTelescopeController):
         sw[0].s = PyIndi.ISS_ON  # PARK
         sw[1].s = PyIndi.ISS_OFF # UNPARK
         self.client.sendNewSwitch(sw)
-        return {"status": "Telescope parked"}
 
     def unpark(self):
         sw = self.device.getSwitch("TELESCOPE_PARK")
@@ -213,7 +212,6 @@ class IndiTelescopeController(BaseTelescopeController):
         sw[0].s = PyIndi.ISS_OFF # PARK
         sw[1].s = PyIndi.ISS_ON  # UNPARK
         self.client.sendNewSwitch(sw)
-        return {"status": "Telescope unparked"}
 
     def get_parking_status(self):
         sw = self.device.getSwitch("TELESCOPE_PARK")
