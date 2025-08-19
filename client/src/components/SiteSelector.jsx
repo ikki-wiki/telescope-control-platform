@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getSiteSelection, setSiteSelection, getSiteName, setSiteName } from '../api/telescopeAPI';
+import { toast } from 'react-hot-toast';
 
 export default function SiteSelector({ onSiteChange }) {
   const [sites, setSites] = useState([
@@ -19,14 +20,15 @@ export default function SiteSelector({ onSiteChange }) {
         const nameData = await getSiteName(); // { status, name }
 
         if (selectionData.status === 'success' && Array.isArray(selectionData.sites)) {
-          const updatedSites = sites.map(site => {
-            const found = selectionData.sites.find(s => s.id === site.id);
-            return { ...site, active: found ? found.state === 'On' : false };
-          });
-          setSites(updatedSites);
+          setSites(prevSites =>
+            prevSites.map(site => {
+              const found = selectionData.sites.find(s => s.id === site.id);
+              return { ...site, active: found ? found.state === 'On' : false };
+            })
+          );
 
           // Inform parent of current active site id
-          const activeSite = updatedSites.find(s => s.active);
+          const activeSite = selectionData.sites.find(s => s.state === 'On');
           if (activeSite && onSiteChange) {
             onSiteChange(activeSite.id);
           }
@@ -36,33 +38,34 @@ export default function SiteSelector({ onSiteChange }) {
           setSiteNameLocal(nameData.name || '');
         }
       } catch (error) {
-        console.error('Failed to fetch site selection or name', error);
+        toast.error("Failed to fetch site selection or name");
+        console.error(error);
       }
     };
 
     fetchSiteData();
-  }, []);
+  }, [onSiteChange]);
 
   // Handle site radio change
   const handleSiteChange = async (siteId) => {
     setIsLoading(true);
     try {
-      // Update the device switch vector to turn selected site On, others Off
       await setSiteSelection(siteId);
 
-      // Update local sites array to reflect selection
-      const updatedSites = sites.map(site => ({
-        ...site,
-        active: site.id === siteId,
-      }));
-      setSites(updatedSites);
+      setSites(prevSites =>
+        prevSites.map(site => ({
+          ...site,
+          active: site.id === siteId,
+        }))
+      );
 
-      // Notify parent of change so it can update coordinates display
       if (onSiteChange) {
         onSiteChange(siteId);
       }
+
+      toast.success(`Switched to Site ${siteId}`);
     } catch (error) {
-      alert('Failed to update site selection');
+      toast.error("Failed to update site selection");
       console.error(error);
     }
     setIsLoading(false);
@@ -78,9 +81,9 @@ export default function SiteSelector({ onSiteChange }) {
     setIsLoading(true);
     try {
       await setSiteName(siteName);
-      alert('Site name updated');
+      toast.success("Site name updated");
     } catch (error) {
-      alert('Failed to update site name');
+      toast.error("Failed to update site name");
       console.error(error);
     }
     setIsLoading(false);
@@ -119,7 +122,7 @@ export default function SiteSelector({ onSiteChange }) {
           onChange={handleNameChange}
           disabled={isLoading}
           placeholder="Enter site name"
-          className="border border-gray-300 rounded px-3 py-2 w-full mb-2 text-sm"
+          className="border border-gray-300 rounded px-3 py-2 w-full mb-2 text-sm text-black"
         />
         <button
           onClick={handleSaveName}

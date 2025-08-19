@@ -24,7 +24,7 @@ LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
 Simbad.TIMEOUT = 20  # optional: increase timeout
 
-controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
 
 try:
     controller.connect()
