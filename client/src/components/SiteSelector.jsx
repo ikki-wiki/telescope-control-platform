@@ -12,13 +12,11 @@ export default function SiteSelector({ onSiteChange }) {
   const [siteName, setSiteNameLocal] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch current selected site and name on mount
+  // Fetch selection and active site name once on mount
   useEffect(() => {
-    const fetchSiteData = async () => {
+    const fetchInitialData = async () => {
       try {
-        const selectionData = await getSiteSelection(); // { status, sites: [{id, state}] }
-        const nameData = await getSiteName(); // { status, name }
-
+        const selectionData = await getSiteSelection();
         if (selectionData.status === 'success' && Array.isArray(selectionData.sites)) {
           setSites(prevSites =>
             prevSites.map(site => {
@@ -26,16 +24,12 @@ export default function SiteSelector({ onSiteChange }) {
               return { ...site, active: found ? found.state === 'On' : false };
             })
           );
-
-          // Inform parent of current active site id
           const activeSite = selectionData.sites.find(s => s.state === 'On');
-          if (activeSite && onSiteChange) {
-            onSiteChange(activeSite.id);
-          }
-        }
+          if (activeSite && onSiteChange) onSiteChange(activeSite.id);
 
-        if (nameData.status === 'success') {
-          setSiteNameLocal(nameData.name || '');
+          // Fetch name for the active site
+          const nameData = await getSiteName();
+          if (nameData.status === 'success') setSiteNameLocal(nameData.name || '');
         }
       } catch (error) {
         toast.error("Failed to fetch site selection or name");
@@ -43,7 +37,7 @@ export default function SiteSelector({ onSiteChange }) {
       }
     };
 
-    fetchSiteData();
+    fetchInitialData();
   }, [onSiteChange]);
 
   // Handle site radio change
@@ -53,15 +47,14 @@ export default function SiteSelector({ onSiteChange }) {
       await setSiteSelection(siteId);
 
       setSites(prevSites =>
-        prevSites.map(site => ({
-          ...site,
-          active: site.id === siteId,
-        }))
+        prevSites.map(site => ({ ...site, active: site.id === siteId }))
       );
 
-      if (onSiteChange) {
-        onSiteChange(siteId);
-      }
+      if (onSiteChange) onSiteChange(siteId);
+
+      // Fetch site name for the newly selected site
+      const nameData = await getSiteName();
+      if (nameData.status === 'success') setSiteNameLocal(nameData.name || '');
 
       toast.success(`Switched to Site ${siteId}`);
     } catch (error) {
@@ -71,12 +64,8 @@ export default function SiteSelector({ onSiteChange }) {
     setIsLoading(false);
   };
 
-  // Handle site name change input locally
-  const handleNameChange = (e) => {
-    setSiteNameLocal(e.target.value);
-  };
+  const handleNameChange = (e) => setSiteNameLocal(e.target.value);
 
-  // Save site name to device
   const handleSaveName = async () => {
     setIsLoading(true);
     try {
@@ -94,7 +83,7 @@ export default function SiteSelector({ onSiteChange }) {
       <div className="mb-4">
         <strong>Choose Active Site:</strong>
         <div className="flex gap-4 mt-2">
-          {sites.map((site) => (
+          {sites.map(site => (
             <label key={site.id} className="inline-flex items-center cursor-pointer">
               <input
                 type="radio"
@@ -122,7 +111,7 @@ export default function SiteSelector({ onSiteChange }) {
           onChange={handleNameChange}
           disabled={isLoading}
           placeholder="Enter site name"
-          className="border border-gray-300 rounded px-3 py-2 w-full mb-2 text-sm text-black"
+          className="border border-gray-300 rounded px-3 py-2 w-full mb-2 text-sm text-white"
         />
         <button
           onClick={handleSaveName}

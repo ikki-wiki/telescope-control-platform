@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import {
-  getSiteInfo,
-  setSiteInfo,
-} from '../api/telescopeAPI';
+import { getSiteInfo, setSiteInfo } from '../api/telescopeAPI';
+import { toast } from 'react-hot-toast';
 
 export default function SiteInfoManager({ activeSiteId }) {
   const [currentInfo, setCurrentInfo] = useState(null);
@@ -11,18 +9,14 @@ export default function SiteInfoManager({ activeSiteId }) {
   const [elevation, setElevation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  /** Parse coordinate string or decimal into decimal degrees. */
   function parseCoordinate(input) {
     if (!input) return NaN;
     const trimmed = String(input).trim().toUpperCase();
-
     const directionMatch = trimmed.match(/[NSEW]$/);
     const direction = directionMatch ? directionMatch[0] : null;
     const withoutDir = trimmed.replace(/[NSEW]$/i, '').trim();
-
-    const dmsRegex = /^(\d+(?:\.\d+)?)\D*(\d+(?:\.\d+)?)?\D*(\d+(?:\.\d+)?)?$/;
+    const dmsRegex = /^(\d+(?:\.\d+)?)\s*[°ºd]?\s*(\d+(?:\.\d+)?)?\s*['’m]?\s*(\d+(?:\.\d+)?)?\s*["”s]?$/i;
     const match = withoutDir.match(dmsRegex);
-
     let degrees;
     if (match) {
       const d = parseFloat(match[1]) || 0;
@@ -33,17 +27,12 @@ export default function SiteInfoManager({ activeSiteId }) {
       degrees = parseFloat(withoutDir);
     }
     if (isNaN(degrees)) return NaN;
-
-    if (direction === 'S' || direction === 'W') {
-      degrees *= -1;
-    }
+    if (direction === 'S' || direction === 'W') degrees *= -1;
     return degrees;
   }
 
-  /** Convert decimal degrees to DMS string (with rollover). */
   function decimalToDMS(decimal, isLatitude = true) {
     if (typeof decimal !== 'number' || isNaN(decimal)) return '';
-
     const absolute = Math.abs(decimal);
     let degrees = Math.floor(absolute);
     let minutesFloat = (absolute - degrees) * 60;
@@ -59,29 +48,16 @@ export default function SiteInfoManager({ activeSiteId }) {
       degrees += 1;
     }
 
-    let direction = '';
-    if (isLatitude) {
-      direction = decimal >= 0 ? 'N' : 'S';
-    } else {
-      direction = decimal >= 0 ? 'E' : 'W';
-    }
-
+    const direction = isLatitude ? (decimal >= 0 ? 'N' : 'S') : (decimal >= 0 ? 'E' : 'W');
     return `${degrees}° ${minutes}' ${seconds.toFixed(2)}" ${direction}`;
   }
 
-  /** Convert 0–360 East-positive longitude to signed -180..180 */
   function east360ToSigned(decimal, isLatitude = false) {
     if (typeof decimal !== 'number' || isNaN(decimal)) return NaN;
-
-    if (isLatitude) {
-      // Latitude is already -90..90 typically
-      return decimal;
-    } else {
-      // Normalize to 0-360 first
-      let lon = ((decimal % 360) + 360) % 360;
-      if (lon > 180) lon -= 360; // Convert to -180..180
-      return lon;
-    }
+    if (isLatitude) return decimal;
+    let lon = ((decimal % 360) + 360) % 360;
+    if (lon > 180) lon -= 360;
+    return lon;
   }
 
   useEffect(() => {
@@ -92,8 +68,10 @@ export default function SiteInfoManager({ activeSiteId }) {
         setLatitude(data.site.latitude.toString());
         setLongitude(data.site.longitude.toString());
         setElevation(data.site.elevation.toString());
+        toast.success('Site info loaded successfully');
       } catch (err) {
         console.error('Failed to fetch site info', err);
+        toast.error('Failed to fetch site info');
       }
     };
     fetchSiteInfo();
@@ -107,15 +85,12 @@ export default function SiteInfoManager({ activeSiteId }) {
       const parsedElev = parseFloat(elevation);
 
       if (isNaN(parsedLat) || isNaN(parsedLon) || isNaN(parsedElev)) {
-        alert('Invalid coordinate or elevation');
+        toast.error('Invalid coordinate or elevation');
         setIsLoading(false);
         return;
       }
 
-      // Normalize longitude to [0, 360)
-      if (parsedLon < 0) {
-        parsedLon = 360 + parsedLon;
-      }
+      if (parsedLon < 0) parsedLon = 360 + parsedLon;
 
       await setSiteInfo({
         latitude: parsedLat,
@@ -123,14 +98,12 @@ export default function SiteInfoManager({ activeSiteId }) {
         elevation: parsedElev,
       });
 
-      setLatitude('');
-      setLongitude('');
-      setElevation('');
       const updatedInfo = await getSiteInfo();
       setCurrentInfo(updatedInfo.site);
+      toast.success('Site info updated successfully');
     } catch (err) {
-      alert('Failed to update site info');
       console.error(err);
+      toast.error('Failed to update site info');
     }
     setIsLoading(false);
   };
@@ -140,18 +113,12 @@ export default function SiteInfoManager({ activeSiteId }) {
       <p className="mb-4">
         {currentInfo ? (
           <>
-            <strong>Latitude:</strong>  
-            <br />
-            • East-positive (0–360 or signed): {currentInfo.latitude.toFixed(4)}  
-            <br />
-            • N/S format: {decimalToDMS(currentInfo.latitude, true)}
-            <br />
-            <strong>Longitude:</strong>  
-            <br />
-            • East-positive (INDI raw): {currentInfo.longitude.toFixed(4)}  
-            <br />
-            • Signed W/E format: {decimalToDMS(east360ToSigned(currentInfo.longitude, false), false)}
-            <br />
+            <strong>Latitude:</strong><br />
+            • East-positive (0–360 or signed): {currentInfo.latitude.toFixed(4)}<br />
+            • N/S format: {decimalToDMS(currentInfo.latitude, true)}<br />
+            <strong>Longitude:</strong><br />
+            • East-positive (INDI raw): {currentInfo.longitude.toFixed(4)}<br />
+            • Signed W/E format: {decimalToDMS(east360ToSigned(currentInfo.longitude, false), false)}<br />
             <strong>Elevation:</strong> {currentInfo.elevation.toFixed(2)} m
           </>
         ) : (
@@ -166,7 +133,7 @@ export default function SiteInfoManager({ activeSiteId }) {
           id="latitude"
           value={latitude}
           onChange={(e) => setLatitude(e.target.value)}
-          placeholder={"e.g., 32.65 or 32° 39' N or 32 39 0 N"}
+          placeholder="e.g., 32.65 or 32° 39' N or 32 39 0 N"
           className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
         />
       </div>
@@ -178,7 +145,7 @@ export default function SiteInfoManager({ activeSiteId }) {
           id="longitude"
           value={longitude}
           onChange={(e) => setLongitude(e.target.value)}
-          placeholder={"e.g., -16.91 or 16° 55' W"}
+          placeholder="e.g., -16.91 or 16° 55' W"
           className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
         />
       </div>
@@ -190,7 +157,7 @@ export default function SiteInfoManager({ activeSiteId }) {
           id="elevation"
           value={elevation}
           onChange={(e) => setElevation(e.target.value)}
-          placeholder={"e.g., 0"}
+          placeholder="e.g., 0"
           className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
         />
       </div>
