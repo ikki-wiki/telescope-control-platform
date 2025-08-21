@@ -3,18 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getTelescopeCoordinates } from '../api/telescopeAPI';
 
 export default function CurrentTelescopePosition() {
-  const [currentRa, setCurrentRa] = useState('00:00:00');
-  const [currentDec, setCurrentDec] = useState('+00:00:00');
-  const [currentAlt, setCurrentAlt] = useState('00.00');
-  const [currentAz, setCurrentAz] = useState('00.00');
+  const [currentRa, setCurrentRa] = useState('0');
+  const [currentDec, setCurrentDec] = useState('0');
+  const [currentAlt, setCurrentAlt] = useState(0);
+  const [currentAz, setCurrentAz] = useState(0);
 
   const fetchCurrentPosition = async () => {
     try {
       const data = await getTelescopeCoordinates();
       setCurrentRa(data.position.ra);
       setCurrentDec(data.position.dec);
-      setCurrentAlt(data.alt.toFixed(3));
-      setCurrentAz(data.az.toFixed(3));
+      setCurrentAlt(data.alt);
+      setCurrentAz(data.az);
     } catch (error) {
       console.error('Error fetching current position:', error);
     }
@@ -51,68 +51,55 @@ export default function CurrentTelescopePosition() {
     return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div className="mb-4 p-3 rounded bg-gray-800 text-gray-100 shadow-sm">
-      <h3 className="font-medium mb-2">Current Telescope Position:</h3>
+  // Small animation props used repeatedly
+  const animateProps = {
+    initial: { opacity: 0, y: -5 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: 5 },
+    transition: { duration: 0.3 },
+  };
 
-      <div className="space-y-1">
+  return (
+    <div className="mb-4 p-3 rounded bg-gray-800 text-gray-100 shadow-sm ">
+      <h3 className="font-medium mb-2">Current Telescope Position</h3>
+
+      <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-base">
+        {/* RA (top-left) */}
         <div>
           <span className="text-neutral-400">RA:</span>{' '}
           <AnimatePresence mode="wait">
-            <motion.span
-              key={currentRa}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
-              transition={{ duration: 0.3 }}
-              className="font-mono"
-            >
+            <motion.span key={currentRa} {...animateProps} className="font-mono">
               {rawRAtoHMS(currentRa)}
             </motion.span>
           </AnimatePresence>
         </div>
+
+        {/* Azimuth (top-right) */}
         <div>
-          <span className="text-neutral-400">DEC:</span>{' '}
+          <span className="text-neutral-400">Azimuth:</span>{' '}
           <AnimatePresence mode="wait">
-            <motion.span
-              key={currentDec}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
-              transition={{ duration: 0.3 }}
-              className="font-mono"
-            >
+            <motion.span key={currentAz} {...animateProps} className="font-mono">
+              {formatAz(currentAz)}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+
+        {/* Declination (bottom-left) */}
+        <div>
+          <span className="text-neutral-400">Dec:</span>{' '}
+          <AnimatePresence mode="wait">
+            <motion.span key={currentDec} {...animateProps} className="font-mono">
               {rawDECtoDMS(currentDec)}
             </motion.span>
           </AnimatePresence>
         </div>
+
+        {/* Altitude (bottom-right) */}
         <div>
           <span className="text-neutral-400">Altitude:</span>{' '}
           <AnimatePresence mode="wait">
-            <motion.span
-              key={currentAlt}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
-              transition={{ duration: 0.3 }}
-              className="font-mono"
-            >
-              {formatAlt(Number(currentAlt))}
-            </motion.span>
-          </AnimatePresence>
-        </div>
-        <div>
-          <span className="text-neutral-400">Azimuth:</span>{' '}
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={currentAz}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
-              transition={{ duration: 0.3 }}
-              className="font-mono"
-            >
-              {formatAz(Number(currentAz))}
+            <motion.span key={currentAlt} {...animateProps} className="font-mono">
+              {formatAlt(currentAlt)}
             </motion.span>
           </AnimatePresence>
         </div>

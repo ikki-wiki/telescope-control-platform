@@ -4,19 +4,19 @@ export default function Home() {
   return (
     <section className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-4 text-center">
-        OAUMa Observatory Control System
+        OAUMa Telescope Control System
       </h1>
-      <p className="text-lg text-gray-400 text-center mb-8">
-        A remote web-based platform for controlling the Meade LX200 telescope at the Observatório Astronómico da Universidade da Madeira.
+      <p className="text-lg text-gray-400 text-center mb-12">
+        A web-based platform for controlling the Meade LX200 telescope at the Observatório Astronómico da Universidade da Madeira.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <Feature icon="🪐" label="Slew to Coordinates" />
         <Feature icon="🔭" label="Monitor Live Telescope Position" />
-        <Feature icon="🧭" label="Adjust Slew Speeds" />
+        <Feature icon="📡" label="Adjust Slew Speed" />
         <Feature icon="⏱️" label="Sync Date and Time" />
-        <Feature icon="📡" label="Full Remote Access" />
-        <Feature icon="🔒" label="Tracking and Safety Controls" />
+        <Feature icon="🧭" label="Manual Telescope Control" />
+        <Feature icon="🔒" label="Park" />
       </div>
 
       <ArchitectureFlow />

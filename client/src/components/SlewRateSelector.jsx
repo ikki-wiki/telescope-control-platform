@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSlewRate, setSlewRate } from "../api/telescopeAPI";
+import { toast } from "react-hot-toast";
 
 // Mapping INDI names to user-friendly labels and descriptions
 const SLEW_RATE_DETAILS = {
@@ -25,7 +26,6 @@ export default function SlewRateSelector() {
   const [availableRates, setAvailableRates] = useState([]);
   const [selectedRate, setSelectedRate] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const fetchRates = async () => {
     try {
@@ -33,7 +33,7 @@ export default function SlewRateSelector() {
       setAvailableRates(rates);
       setSelectedRate(current);
     } catch (err) {
-      setError("Failed to fetch slew rate.");
+      toast.error("Failed to fetch slew rate.");
       console.error(err);
     }
   };
@@ -45,12 +45,13 @@ export default function SlewRateSelector() {
   const handleChange = async (e) => {
     const newRate = e.target.value;
     setLoading(true);
-    setError("");
+    const toastId = toast.loading("Setting slew rate...");
     try {
       await setSlewRate(newRate);
       setSelectedRate(newRate);
+      toast.success("Slew rate set successfully", { id: toastId });
     } catch (err) {
-      setError("Failed to set slew rate.");
+      toast.error("Failed to set slew rate.", { id: toastId });
       console.error(err);
     }
     setLoading(false);
@@ -58,7 +59,7 @@ export default function SlewRateSelector() {
 
   return (
     <div className="max-w-md">
-      <label className="block text-sm font-medium mb-1">Slew Rate</label>
+      <label className="block text-sm font-medium mb-1">Current Slew Rate</label>
       <select
         value={selectedRate}
         onChange={handleChange}
@@ -78,7 +79,6 @@ export default function SlewRateSelector() {
           </option>
         ))}
       </select>
-      {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
     </div>
   );
 }

@@ -1,49 +1,33 @@
 import CoordinateSlew from '../components/CoordinateSlew';
-import AbortMotion from '../components/AbortMotion';
 import ParkUnpark from '../components/ParkUnpark';
-import ParkPositionManager from '../components/ParkPositionManager';
 import ManualTelescopeMotionControl from '../components/ManualTelescopeMotionControl';
-import SlewToObject from '../components/SlewToObject';
 
 export default function Control() {
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
+      <h1 className="text-3xl font-bold mb-4">Telescope Control</h1>
 
-      {/* Slewing */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Slew to Coordinates</h2>
+      {/* Slew to Coordinates & Manual Control / Park Management */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Slew to Coordinates Card */}
+        <div className="rounded-2xl p-6 shadow-sm bg-gray-900 space-y-4">
+          <h2 className="text-xl font-semibold">Slew to Coordinates</h2>
           <CoordinateSlew />
         </div>
 
-        {/*<div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Slew to Object</h2>
-          <SlewToObject />
-        </div>
+        {/* Manual Control and Park Management Section */}
+        <div className="space-y-6">
+          <div className="rounded-2xl p-6 shadow-sm bg-gray-900 space-y-4">
+            <h2 className="text-xl font-semibold">Manual Telescope Motion Control</h2>
+            <ManualTelescopeMotionControl />
+          </div>
 
-        <div className="space-y-4">
-          <AbortMotion />
-        </div>*/}
-
-        {/* Manual Controls */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Manual Telescope Motion Control</h2>
-          <ManualTelescopeMotionControl />
-        </div>
-
-        {/* Park Management */}
-        <div className="space-y-4">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Park / Unpark Telescope</h2>
+          <div className="rounded-2xl p-12 shadow-sm bg-gray-900 space-y-4 justify-items-center">
             <ParkUnpark />
           </div>
         </div>
-
       </section>
-
-      
-
-      
     </div>
   );
 }
