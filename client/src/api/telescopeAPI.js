@@ -1,10 +1,10 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-export async function slewToCoordinates(ra, dec) {
+export async function slewToCoordinates(ra, dec, objectName) {
   const response = await fetch(`${BASE_URL}/slew`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ra, dec }),
+    body: JSON.stringify({ ra, dec, objectName }),
   });
 
   if (!response.ok) {

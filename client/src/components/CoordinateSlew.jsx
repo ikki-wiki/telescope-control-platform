@@ -141,7 +141,7 @@ export default function CoordinateSlew() {
     const toastId = toast.loading('Slewing...');
 
     try {
-      const result = await slewToCoordinates(ra, dec);
+      const result = await slewToCoordinates(ra, dec, objectName);
       if (result.status === 'success') {
         toast.success(result.message || 'Slew successful!', { id: toastId });
         setRaH('');

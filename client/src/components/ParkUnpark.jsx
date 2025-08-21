@@ -21,6 +21,20 @@ export default function ParkUnpark() {
     setIsLoading(false);
   };
 
+  const handleUnpark = async () => {
+    setIsLoading(true);
+    const toastId = toast.loading("Unparking telescope...");
+    try {
+      await unparkTelescope();
+      setIsParked(false);
+      toast.success("Telescope unparked", { id: toastId });
+    } catch (err) {
+      toast.error("Error unparking telescope: " + err.message, { id: toastId });
+    }
+    setIsLoading(false);
+  };
+
+
   return (
     <section className="max-w-md mx-auto">
       {/* Button to trigger confirmation modal */}
@@ -37,6 +51,18 @@ export default function ParkUnpark() {
         >
           Park Telescope
         </button>
+        {/*<button
+          type="button"
+          onClick={handleUnpark}
+          disabled={isLoading || isParked}
+          className={`${
+            isParked || isLoading
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-700/50"
+          } text-white px-6 py-3 rounded font-semibold transition text-lg`}
+        >
+          Unpark Telescope
+        </button>*/}
       </div>
 
       {/* PARK confirmation modal */}

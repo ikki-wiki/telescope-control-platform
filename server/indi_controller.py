@@ -648,3 +648,13 @@ class IndiTelescopeController(BaseTelescopeController):
         self.client.sendNewSwitch(config_process_prop)
 
         return {"status": "success"}
+
+    def set_track_mode(self, mode):
+        """Sets the telescope tracking mode."""
+        track_mode_prop = self.device.getSwitch("TELESCOPE_TRACK_MODE")
+        if not track_mode_prop:
+            raise RuntimeError("Track Mode property not found")
+        for item in track_mode_prop:
+            item.s = PyIndi.ISS_ON if item.name == mode else PyIndi.ISS_OFF
+            self.logger.info(f"[INDI CONTROLLER] Setting {item.name} to {'ON' if item.s == PyIndi.ISS_ON else 'OFF'}")
+        self.client.sendNewSwitch(track_mode_prop)

@@ -92,6 +92,7 @@ def slew_to_coordinates():
     data = request.json
     ra_str = data.get("ra")
     dec_str = data.get("dec")
+    object_name = data.get("objectName")
 
     try:
         ra = hms_to_hours(ra_str)
@@ -116,7 +117,7 @@ def slew_to_coordinates():
         # Rule #2: Check if target is above Low-altitude atmospheric distortion
         min_alt = 15  # degrees
         if alt_az['altitude'] >= min_alt:
-            app.logger.info(f"✅ Above {min_alt}° altitude limit")
+            app.logger.info(f"✅ Above minimum {min_alt}° altitude limit")
         else:
             app.logger.info(f"⚠ Target is above horizon but below {min_alt}° — low visibility")
 
@@ -127,6 +128,15 @@ def slew_to_coordinates():
         else:
             app.logger.info(f"⚠ Target is above {max_alt}° — potential obstruction")
             return jsonify({'message': "Target is above maximum altitude", 'status': 'error'}), 200 # 200 so the message is shown correctly in the interface
+        
+        # Change Track Mode if object sent is Sun or Moon
+
+        if object_name.lower() == "sun":
+            controller.set_track_mode("TRACK_SOLAR")
+        elif object_name.lower() == "moon":
+            controller.set_track_mode("TRACK_LUNAR")
+        else:
+            controller.set_track_mode("TRACK_SIDEREAL")
 
         controller.slew_to(ra, dec)
         app.logger.debug(f"Slewing to RA={ra} hours, Dec={dec} degrees")
