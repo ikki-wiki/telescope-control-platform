@@ -121,7 +121,7 @@ def slew_to_coordinates():
             app.logger.info(f"⚠ Target is above horizon but below {min_alt}° — low visibility")
 
         # Rule #3: Check if target is below maximum physical altitude
-        max_alt = 85  # degrees
+        max_alt = 68  # degrees
         if alt_az['altitude'] <= max_alt:
             app.logger.info(f"✅ Below {max_alt}° altitude limit")
         else:
