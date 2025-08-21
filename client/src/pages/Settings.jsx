@@ -13,7 +13,7 @@ export default function Settings() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
-      <h1 className="text-3xl font-bold mb-4">Telescope Settings</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center">Telescope Settings</h1>
 
       {/* Date/Time & Slew Rate Section */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
