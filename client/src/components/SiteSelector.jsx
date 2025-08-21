@@ -58,7 +58,7 @@ export default function SiteSelector({ onSiteChange }) {
 
       toast.success(`Switched to Site ${siteId}`);
     } catch (error) {
-      toast.error("Failed to update site selection");
+      toast.error("Failed to switch sites");
       console.error(error);
     }
     setIsLoading(false);
@@ -118,7 +118,7 @@ export default function SiteSelector({ onSiteChange }) {
           disabled={isLoading}
           className={`w-full ${isLoading ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold rounded py-2 px-4 transition`}
         >
-          {isLoading ? 'Saving...' : 'Save Site Name'}
+          {isLoading ? 'Saving...' : 'Save site name'}
         </button>
       </div>
     </section>

@@ -25,8 +25,8 @@ export default function DateTimeControl() {
           setNewOffset(parseFloat(offset).toFixed(2));
         }
       } catch (err) {
-        console.error('Failed to fetch current datetime and offset:', err);
-        toast.error('Failed to fetch current date/time');
+        console.error('Failed to fetch current date, time and offset:', err);
+        toast.error('Failed to fetch current date, time and offset');
       }
     };
     fetchDateTime();
@@ -38,7 +38,7 @@ export default function DateTimeControl() {
       return;
     }
     setIsLoading(true);
-    const toastId = toast.loading('Saving date and time...');
+    const toastId = toast.loading('Saving date, time and offset...');
     try {
       const utcTime = {
         date: newDate,
@@ -49,14 +49,14 @@ export default function DateTimeControl() {
       setOffset(parseFloat(newOffset).toFixed(2));
       setCurrentDate(newDate);
       setCurrentTime(newTime);
-      toast.success('Date and time saved', { id: toastId });
+      toast.success('Date, time and offset saved', { id: toastId });
       // Reset inputs or keep as entered? Below resets:
       setNewDate('');
       setNewTime('');
       setNewOffset('0.00');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to set date/time', { id: toastId });
+      toast.error('Failed to set date, time and offset', { id: toastId });
     }
     setIsLoading(false);
   };
@@ -99,7 +99,7 @@ export default function DateTimeControl() {
             htmlFor="time"
             className="text-sm font-medium mb-1 block"
           >
-            New time (UTC)
+            New UTC time
           </label>
           <input
             type="time"
@@ -143,7 +143,7 @@ export default function DateTimeControl() {
           isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
         } text-white font-semibold rounded py-2 px-4 transition`}
       >
-        {isLoading ? 'Saving...' : 'Save date and time'}
+        {isLoading ? 'Saving...' : 'Save date, time and offset'}
       </button>
     </section>
   );

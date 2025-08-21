@@ -49,16 +49,16 @@ export default function SlewRateSelector() {
     try {
       await setSlewRate(newRate);
       setSelectedRate(newRate);
-      toast.success("Slew rate set successfully", { id: toastId });
+      toast.success("Slew rate changed successfully", { id: toastId });
     } catch (err) {
-      toast.error("Failed to set slew rate.", { id: toastId });
+      toast.error("Failed to change slew rate.", { id: toastId });
       console.error(err);
     }
     setLoading(false);
   };
 
   return (
-    <div className="max-w-md">
+    <div>
       <label className="block text-sm font-medium mb-1">Current Slew Rate</label>
       <select
         value={selectedRate}

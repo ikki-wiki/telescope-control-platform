@@ -191,7 +191,7 @@ export default function CoordinateSlew() {
       toast.success('Current telescope position loaded');
     } catch (error) {
       console.error(error);
-      toast.error('Failed to fetch current position');
+      toast.error('Failed to fetch current telescope position');
     }
   };
 
@@ -202,10 +202,10 @@ export default function CoordinateSlew() {
         parseAndSetRA(formatRA(result.ra / 15));
         parseAndSetDec(formatDEC(result.dec));
         toast.success('Object coordinates loaded');
-      } else toast.error(result.message || 'Failed to resolve object');
+      } else toast.error(result.message || 'Failed to find object');
     } catch (error) {
       console.error(error);
-      toast.error('Failed to resolve object');
+      toast.error('Failed to find object');
     }
   };
 

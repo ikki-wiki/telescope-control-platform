@@ -68,10 +68,10 @@ export default function SiteInfoManager({ activeSiteId }) {
         setLatitude(data.site.latitude.toString());
         setLongitude(data.site.longitude.toString());
         setElevation(data.site.elevation.toString());
-        toast.success('Site info loaded successfully');
+        toast.success('Site coordinates loaded successfully');
       } catch (err) {
-        console.error('Failed to fetch site info', err);
-        toast.error('Failed to fetch site info');
+        console.error('Failed to fetch site coordinates', err);
+        toast.error('Failed to fetch site coordinates');
       }
     };
     fetchSiteInfo();
@@ -100,10 +100,10 @@ export default function SiteInfoManager({ activeSiteId }) {
 
       const updatedInfo = await getSiteInfo();
       setCurrentInfo(updatedInfo.site);
-      toast.success('Site info updated successfully');
+      toast.success('Site coordinates updated successfully');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to update site info');
+      toast.error('Failed to update site coordinates');
     }
     setIsLoading(false);
   };
@@ -167,7 +167,7 @@ export default function SiteInfoManager({ activeSiteId }) {
         disabled={isLoading}
         className={`w-full ${isLoading ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold rounded py-2 px-4 transition`}
       >
-        {isLoading ? 'Saving...' : 'Save Site Info'}
+        {isLoading ? 'Saving...' : 'Save site coordinates'}
       </button>
     </section>
   );
