@@ -16,7 +16,7 @@ export default function Home() {
         <Feature icon="📡" label="Adjust Slew Speed" />
         <Feature icon="⏱️" label="Sync Date and Time" />
         <Feature icon="🧭" label="Manual Telescope Control" />
-        <Feature icon="🔒" label="Park" />
+        <Feature icon="🔒" label="Park the Telescope" />
       </div>
 
       <ArchitectureFlow />

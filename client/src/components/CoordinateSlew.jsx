@@ -239,7 +239,7 @@ export default function CoordinateSlew() {
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700'
           }`}
-        >Load Object Coordinates</button>
+        >Load object coordinates</button>
       </div>
 
       {/* 3. Manual coordinate entry */}
