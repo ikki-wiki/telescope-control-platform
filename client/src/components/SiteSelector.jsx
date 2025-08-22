@@ -3,76 +3,77 @@ import { getSiteSelection, setSiteSelection, getSiteName, setSiteName } from '..
 import { toast } from 'react-hot-toast';
 
 export default function SiteSelector({ onSiteChange }) {
-  const [sites, setSites] = useState([
-    { id: 1, label: 'Site 1', active: false },
-    { id: 2, label: 'Site 2', active: false },
-    { id: 3, label: 'Site 3', active: false },
-    { id: 4, label: 'Site 4', active: false },
-  ]);
+  const [sites, setSites] = useState([]); // Will get actual sites from HC/INDI
+  const [activeSiteId, setActiveSiteId] = useState(null);
   const [siteName, setSiteNameLocal] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch selection and active site name once on mount
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const selectionData = await getSiteSelection();
-        if (selectionData.status === 'success' && Array.isArray(selectionData.sites)) {
-          setSites(prevSites =>
-            prevSites.map(site => {
-              const found = selectionData.sites.find(s => s.id === site.id);
-              return { ...site, active: found ? found.state === 'On' : false };
-            })
-          );
-          const activeSite = selectionData.sites.find(s => s.state === 'On');
-          if (activeSite && onSiteChange) onSiteChange(activeSite.id);
+  // Fetch sites info and active status from backend
+  async function refreshSitesAndName(siteIdToSelect = null) {
+    setIsLoading(true);
+    try {
+      const selectionData = await getSiteSelection();
+      if (
+        selectionData.status === 'success' &&
+        Array.isArray(selectionData.sites)
+      ) {
+        // Only consider the first 3 slots (matching persistent HC sites)
+        const realSites = selectionData.sites.slice(0, 3);
+        setSites(realSites);
 
-          // Fetch name for the active site
-          const nameData = await getSiteName();
-          if (nameData.status === 'success') setSiteNameLocal(nameData.name || '');
+        // Figure out which is active; fallback to provided arg if necessary
+        let active = realSites.find(s => s.state === 'On');
+        if (!active && siteIdToSelect !== null) {
+          active = realSites.find(s => s.id === siteIdToSelect);
         }
-      } catch (error) {
-        toast.error("Failed to fetch site selection or name");
-        console.error(error);
-      }
-    };
+        setActiveSiteId(active ? active.id : realSites[0]?.id);
 
-    fetchInitialData();
+        if (active && onSiteChange) onSiteChange(active.id);
+
+        // Get current name for the selected site
+        const nameData = await getSiteName();
+        if (nameData.status === 'success') setSiteNameLocal(nameData.name || '');
+      }
+    } catch (error) {
+      toast.error('Failed to fetch site selection or name');
+      console.error(error);
+    }
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    refreshSitesAndName();
+    // Optionally, refetch whenever parent tells us site changed
+    // If you want more immediate updates: [onSiteChange, activeSiteId]
   }, [onSiteChange]);
 
-  // Handle site radio change
   const handleSiteChange = async (siteId) => {
     setIsLoading(true);
     try {
       await setSiteSelection(siteId);
-
-      setSites(prevSites =>
-        prevSites.map(site => ({ ...site, active: site.id === siteId }))
-      );
-
+      setActiveSiteId(siteId);
       if (onSiteChange) onSiteChange(siteId);
-
-      // Fetch site name for the newly selected site
-      const nameData = await getSiteName();
-      if (nameData.status === 'success') setSiteNameLocal(nameData.name || '');
-
-      toast.success(`Switched to Site ${siteId}`);
+      // Immediately refresh sites & name to sync UI with HC
+      await refreshSitesAndName(siteId);
+      toast.success(`Switched to site`);
     } catch (error) {
-      toast.error("Failed to switch sites");
+      toast.error('Failed to switch sites');
       console.error(error);
     }
     setIsLoading(false);
   };
 
-  const handleNameChange = (e) => setSiteNameLocal(e.target.value);
+  const handleNameChange = e => setSiteNameLocal(e.target.value);
 
   const handleSaveName = async () => {
     setIsLoading(true);
     try {
       await setSiteName(siteName);
-      toast.success("Site name updated");
+      toast.success('Site name updated');
+      // Refresh name from HC after update
+      await refreshSitesAndName(activeSiteId);
     } catch (error) {
-      toast.error("Failed to update site name");
+      toast.error('Failed to update site name');
       console.error(error);
     }
     setIsLoading(false);
@@ -89,12 +90,12 @@ export default function SiteSelector({ onSiteChange }) {
                 type="radio"
                 name="siteSelection"
                 value={site.id}
-                checked={site.active}
+                checked={site.id === activeSiteId}
                 disabled={isLoading}
                 onChange={() => handleSiteChange(site.id)}
                 className="mr-2"
               />
-              {site.label}
+              {site.label || site.name || `Site ${site.id}`}
             </label>
           ))}
         </div>

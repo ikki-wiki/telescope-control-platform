@@ -517,6 +517,7 @@ def set_site_info():
 def get_site_selection():
     try:
         sites = controller.get_site_selection()
+        sites = sites[:3]
         app.logger.info(f"Sites: {sites}")
         return jsonify({"status": "success", "sites": sites}), 200
     except Exception as e:
