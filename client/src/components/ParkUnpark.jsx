@@ -10,15 +10,23 @@ export default function ParkUnpark() {
   const handlePark = async () => {
     setShowParkConfirm(false);
     setIsLoading(true);
-    const toastId = toast.loading("Parking telescope...");
+    const toastId = toast.loading("Parking telescope... (1 min)", {
+      duration: 60000, // toast stays up for 60s
+    });
+
     try {
       await parkTelescope();
       setIsParked(true);
-      toast.success("Telescope parked", { id: toastId });
+
+      // After 1 min, replace loading toast with success
+      setTimeout(() => {
+        toast.success("Telescope parked safely", { id: toastId });
+        setIsLoading(false);
+      }, 60000);
     } catch (err) {
       toast.error("Error parking telescope: " + err.message, { id: toastId });
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleUnpark = async () => {
