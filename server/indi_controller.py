@@ -323,7 +323,6 @@ class IndiTelescopeController(BaseTelescopeController):
 
         if direction == "stop":
             self.abort_motion()
-            print("Telescope motion stopped")
             return {"status": "Telescope motion stopped"}
 
         motion_map = {
@@ -347,7 +346,7 @@ class IndiTelescopeController(BaseTelescopeController):
         for s in motion:
             if s.name == motion_key:
                 s.setState(PyIndi.ISS_ON)
-                print(f"Telescope moving {direction}")
+                self.logger.info(f"Telescope moving {direction}")
 
         self.client.sendNewSwitch(motion)
         return {"status": f"Telescope moving {direction}"}

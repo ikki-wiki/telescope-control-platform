@@ -362,7 +362,7 @@ export default function CoordinateSlew() {
           onClick={() => setShowSyncConfirm(true)}
           disabled={isSlewing || isSyncing || !isInputComplete}
           className={`w-full ${
-            isSyncing || !isInputComplete ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+            isSyncing || !isInputComplete || isSlewing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
           } text-white font-semibold rounded py-2 transition`}
         >{isSyncing ? 'Syncing...' : 'Sync to coordinates'}</button>
       </div>
