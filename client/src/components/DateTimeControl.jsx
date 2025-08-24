@@ -136,7 +136,7 @@ export default function DateTimeControl() {
         </div>
       </div>
       
-      <div className='mt-auto pt-6 mb-11'>
+      <div className='xl:mt-auto pt-6 xl:mb-11'>
         <button
           onClick={handleSubmit}
           disabled={isLoading}
