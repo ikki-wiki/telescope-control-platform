@@ -82,7 +82,7 @@ export default function DateTimeControl() {
           htmlFor="date"
           className="text-sm font-medium mb-1 block"
         >
-          New date
+          Date
         </label>
         <input
           type="date"
@@ -99,7 +99,7 @@ export default function DateTimeControl() {
             htmlFor="time"
             className="text-sm font-medium mb-1 block"
           >
-            New UTC time
+            UTC time
           </label>
           <input
             type="time"
@@ -115,7 +115,7 @@ export default function DateTimeControl() {
             htmlFor="offset"
             className="text-sm font-medium mb-1 block"
           >
-            New UTC Offset
+            UTC Offset
           </label>
           <select
             id="offset"
