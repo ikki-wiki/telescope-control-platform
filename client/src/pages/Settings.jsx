@@ -20,12 +20,12 @@ export default function Settings() {
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold mb-4 text-center">Telescope Settings</h1>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className={cardClasses}>
           <h2 className="text-xl font-semibold mb-4">Date and Time</h2>
           <DateTimeControl />
         </div>
-        <div className="grid md:grid-rows-1 lg:grid-rows-2 gap-4">
+        <div className="grid md:grid-rows-1 lg:grid-rows-1 gap-4">
           <div className={cardClasses}>
             <h2 className="text-xl font-semibold mb-4">Slew Rate</h2>
             <SlewRateSelector />

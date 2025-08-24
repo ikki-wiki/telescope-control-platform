@@ -66,7 +66,7 @@ export default function DateTimeControl() {
   );
 
   return (
-    <section className="w-full">
+    <section className="w-full flex flex-col h-full">
       <p>
         Current telescope date: <strong>{currentDate || 'Loading...'}</strong>
       </p>
@@ -135,16 +135,19 @@ export default function DateTimeControl() {
           </select>
         </div>
       </div>
-
-      <button
-        onClick={handleSubmit}
-        disabled={isLoading}
-        className={`w-full mt-4 ${
-          isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-        } text-white font-semibold rounded py-2 px-4 transition`}
-      >
-        {isLoading ? 'Saving...' : 'Save date, time and offset'}
-      </button>
+      
+      <div className='mt-auto pt-6 mb-11'>
+        <button
+          onClick={handleSubmit}
+          disabled={isLoading}
+          className={`w-full mt-4 ${
+            isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          } text-white font-semibold rounded py-2 px-4 transition`}
+        >
+          {isLoading ? 'Saving...' : 'Save date, time and offset'}
+        </button>
+      </div>
+      
     </section>
   );
 }
