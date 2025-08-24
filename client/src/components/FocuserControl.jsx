@@ -35,6 +35,7 @@ export default function FocuserControl() {
   const handleTimerChange = (e) => setTimer(e.target.value);
   const handleFocusMotionChange = (e) => setDirection(e.target.value);
 
+  // Normal timed motion (tap mode)
   const handleFocusMotion = async () => {
     if (!direction || !speed || !timer) {
       toast.error('Please select direction, speed, and duration');
@@ -63,27 +64,33 @@ export default function FocuserControl() {
     setIsLoading(false);
   };
 
-  const handleAbortMotion = async () => {
-    setIsLoading(true);
-    const toastId = toast.loading('Aborting focuser motion...');
+  // Abort helper
+  const stopMotion = async () => {
     try {
-      const result = await abortFocuserMotion(true);
-      if (result.status === 'success') {
-        toast.success('Focuser motion aborted', { id: toastId });
-        try {
-          await abortFocuserMotion(false); // reset abort property
-        } catch (err) {
-          console.error('Failed to reset abort property:', err);
-          toast.error('Failed to reset abort property');
-        }
-      } else {
-        throw new Error('Failed to abort focuser motion');
-      }
+      await abortFocuserMotion(true);
+      await abortFocuserMotion(false); // reset abort property
+      toast.success('Focuser stopped');
+    } catch (err) {
+      console.error('Failed to stop focuser:', err);
+      toast.error('Failed to stop focuser');
+    }
+  };
+
+  // Hold mode start
+  const handleHoldStart = async () => {
+    if (!direction || !speed) {
+      toast.error('Please select direction and speed');
+      return;
+    }
+    try {
+      await setFocuserSpeed(speed);
+      // Do NOT set timer → run continuously
+      await setFocuserMotion(direction);
+      toast.success('Focuser moving (hold mode)...');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to abort focuser motion', { id: toastId });
+      toast.error('Failed to start focuser motion');
     }
-    setIsLoading(false);
   };
 
   return (
@@ -130,7 +137,7 @@ export default function FocuserControl() {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <button
-            onClick={handleAbortMotion}
+            onClick={stopMotion}
             className={`w-full mt-4 ${isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} text-white font-semibold rounded py-2 px-4 transition`}
           >
             Abort Motion
@@ -138,7 +145,10 @@ export default function FocuserControl() {
         </div>
         <div>
           <button
-            onClick={handleFocusMotion}
+            onClick={handleFocusMotion}           // Tap mode
+            onMouseDown={handleHoldStart}         // Hold start
+            onMouseUp={stopMotion}                // Stop on release
+            onMouseLeave={stopMotion}             // Stop if mouse leaves
             disabled={isLoading}
             className={`w-full mt-4 ${isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold rounded py-2 px-4 transition`}
           >
