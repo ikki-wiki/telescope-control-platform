@@ -317,3 +317,61 @@ export async function loadSavedConfig() {
   if (!res.ok) throw new Error('Failed to load saved config');
   return res.json();
 }
+
+export async function getFocuserSpeed() {
+  const res = await fetch(`${BASE_URL}/focuser/speed`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error('Failed to fetch focuser speed');
+  return res.json();
+}
+
+export async function setFocuserSpeed(speed) {
+  const res = await fetch(`${BASE_URL}/focuser/speed`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ speed }),
+  });
+  if (!res.ok) throw new Error('Failed to set focuser speed');
+  return res.json();
+}
+
+export async function getFocuserTimer() {
+  const res = await fetch(`${BASE_URL}/focuser/timer`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error('Failed to fetch focuser timer');
+  return res.json();
+}
+
+export async function setFocuserTimer(timer) {
+  const res = await fetch(`${BASE_URL}/focuser/timer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ timer }),
+  });
+  if (!res.ok) throw new Error('Failed to set focuser timer');
+  return res.json();
+}
+
+export async function setFocuserMotion(direction) {
+  const res = await fetch(`${BASE_URL}/focuser/motion`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ direction }),
+  });
+  if (!res.ok) throw new Error('Failed to set focuser motion');
+  return res.json();
+}
+
+export async function abortFocuserMotion(abort) {
+  const res = await fetch(`${BASE_URL}/focuser/motion/abort`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ abort }),
+  });
+  if (!res.ok) throw new Error('Failed to abort focuser motion');
+  return res.json();
+}

@@ -551,5 +551,70 @@ def load_config():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@app.route("/api/focuser/motion", methods=["POST"])
+def set_focuser_motion():
+    data = request.get_json()
+    motion = data.get("motion")
+    if motion is None:
+        return jsonify({"status": "error", "message": "Motion is required"}), 400
+
+    try:
+        controller.set_focuser_motion(motion)
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/focuser/abort", methods=["POST"])
+def set_focuser_abort_motion():
+    try:
+        data = request.get_json()
+        abort = data.get("abort")
+        controller.set_focuser_abort_motion(abort)
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/focuser/speed", methods=["GET"])
+def get_focuser_speed():
+    try:
+        speed = controller.get_focuser_speed()
+        return jsonify({"status": "success", **speed})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/focuser/speed", methods=["POST"])
+def set_focuser_speed():
+    data = request.get_json()
+    speed = data.get("speed")
+    if speed is None:
+        return jsonify({"status": "error", "message": "Speed is required"}), 400
+
+    try:
+        controller.set_focuser_speed(speed)
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/focuser/timer", methods=["GET"])
+def get_focuser_timer():
+    try:
+        timer = controller.get_focuser_timer()
+        return jsonify({"status": "success", **timer})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route("/api/focuser/timer", methods=["POST"])
+def set_focuser_timer():
+    data = request.get_json()
+    timer = data.get("timer")
+    if timer is None:
+        return jsonify({"status": "error", "message": "Timer is required"}), 400
+
+    try:
+        controller.set_focuser_timer(timer)
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7123)

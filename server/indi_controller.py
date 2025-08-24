@@ -655,5 +655,65 @@ class IndiTelescopeController(BaseTelescopeController):
             raise RuntimeError("Track Mode property not found")
         for item in track_mode_prop:
             item.s = PyIndi.ISS_ON if item.name == mode else PyIndi.ISS_OFF
-            self.logger.info(f"[INDI CONTROLLER] Setting {item.name} to {'ON' if item.s == PyIndi.ISS_ON else 'OFF'}")
+            self.logger.info(f"Setting {item.name} to {'ON' if item.s == PyIndi.ISS_ON else 'OFF'}")
         self.client.sendNewSwitch(track_mode_prop)
+
+    def set_focuser_motion(self, direction):
+        focuser_motion_prop = self.device.getSwitch("FOCUS_MOTION")
+        if not focuser_motion_prop:
+            raise RuntimeError("Focuser Motion property not found")
+
+        for item in focuser_motion_prop:
+            item.s = PyIndi.ISS_ON if item.name == direction else PyIndi.ISS_OFF
+            self.logger.info(f"Setting {item.name} to {'ON' if item.s == PyIndi.ISS_ON else 'OFF'}")
+
+        self.client.sendNewSwitch(focuser_motion_prop)
+
+    def set_focuser_speed(self, speed):
+        focuser_speed_prop = self.device.getNumber("FOCUS_SPEED")
+        if not focuser_speed_prop:
+            raise RuntimeError("Focuser Speed property not found")
+
+        for item in focuser_speed_prop:
+            item.value = speed
+            self.logger.info(f"Setting {item.name} to {item.value}")
+
+        self.client.sendNewNumber(focuser_speed_prop)
+
+    def get_focuser_speed(self):
+        focuser_speed_prop = self.device.getNumber("FOCUS_SPEED")
+        if not focuser_speed_prop:
+            raise RuntimeError("Focuser Speed property not found")
+
+        speed = {"speed": [item.value for item in focuser_speed_prop]}
+        return speed
+
+    def set_focuser_timer(self, duration):
+        focuser_timer_prop = self.device.getNumber("FOCUS_TIMER")
+        if not focuser_timer_prop:
+            raise RuntimeError("Focuser Timer property not found")
+
+        for item in focuser_timer_prop:
+            item.value = duration
+            self.logger.info(f"Setting {item.name} to {item.value}")
+
+        self.client.sendNewNumber(focuser_timer_prop)
+
+    def get_focuser_timer(self):
+        focuser_timer_prop = self.device.getNumber("FOCUS_TIMER")
+        if not focuser_timer_prop:
+            raise RuntimeError("Focuser Timer property not found")
+
+        timer = {"timer": [item.value for item in focuser_timer_prop]}
+        return timer
+
+    def set_focuser_abort_motion(self, abort):
+        focuser_abort_motion_prop = self.device.getSwitch("FOCUS_ABORT_MOTION")
+        if not focuser_abort_motion_prop:
+            raise RuntimeError("Focuser Abort Motion property not found")
+
+        for item in focuser_abort_motion_prop:
+            item.s = PyIndi.ISS_ON if abort else PyIndi.ISS_OFF
+            self.logger.info(f"Setting {item.name} to {'ON' if item.s == PyIndi.ISS_ON else 'OFF'}")
+
+        self.client.sendNewSwitch(focuser_abort_motion_prop)
