@@ -182,7 +182,7 @@ export default function TelescopeGamepad() {
             onMouseUp={() => deactivateDirection("north")}
             onMouseLeave={() => deactivateDirection("north")}
           >
-            ↑
+            N
           </button>
 
           <button
@@ -192,7 +192,7 @@ export default function TelescopeGamepad() {
             onMouseUp={() => deactivateDirection("west")}
             onMouseLeave={() => deactivateDirection("west")}
           >
-            ←
+            W
           </button>
 
           <button
@@ -210,7 +210,7 @@ export default function TelescopeGamepad() {
             onMouseUp={() => deactivateDirection("east")}
             onMouseLeave={() => deactivateDirection("east")}
           >
-            →
+            E
           </button>
 
           <button
@@ -223,7 +223,7 @@ export default function TelescopeGamepad() {
             onMouseUp={() => deactivateDirection("south")}
             onMouseLeave={() => deactivateDirection("south")}
           >
-            ↓
+            S
           </button>
         </div>
       </div>

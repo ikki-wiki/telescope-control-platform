@@ -29,7 +29,7 @@ export default function Settings() {
 
       {/* Site Selection & Site Info Section */}
       <section className="border border-gray-400 rounded-2xl p-6 shadow-sm bg-gray-900 flex flex-col space-y-6">
-        <h2 className="text-xl font-semibold">Site Settings</h2>
+        <h2 className="text-xl font-semibold">Site</h2>
         <SiteSelector onSiteChange={handleSiteChange} />
         <SiteInfoManager activeSiteId={activeSiteId} />
       </section>

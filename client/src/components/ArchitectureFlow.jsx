@@ -48,9 +48,9 @@ export function ArchitectureFlow() {
       <h2 className="text-2xl font-semibold mb-6 text-center">System Architecture</h2>
 
       {/* Desktop: Horizontal layout */}
-      <div className="hidden md:flex justify-center">
+      <div className="hidden md:flex lg:gap-2 justify-center">
         {steps.map((step, i) => (
-          <div key={i} className="flex items-center">
+          <div key={i} className="flex items-center lg:gap-2">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

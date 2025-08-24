@@ -12,14 +12,14 @@ export default function Control() {
         
         {/* Slew to Coordinates Card */}
         <div className="rounded-2xl p-6 shadow-sm bg-gray-900 space-y-4">
-          <h2 className="text-xl font-semibold text-center">Slew to Coordinates</h2>
+          <h2 className="text-xl font-semibold text-center">Slew</h2>
           <CoordinateSlew />
         </div>
 
         {/* Manual Control and Park Management Section */}
         <div className="space-y-6">
           <div className="rounded-2xl p-6 shadow-sm bg-gray-900 space-y-4">
-            <h2 className="text-xl font-semibold text-center">Manual Telescope Motion Control</h2>
+            <h2 className="text-xl font-semibold text-center">Manual Control</h2>
             <ManualTelescopeMotionControl />
           </div>
 
