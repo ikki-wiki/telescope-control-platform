@@ -60,31 +60,89 @@ export default function CoordinateSlew() {
     if (val.length >= maxLen && nextRef?.current) nextRef.current.focus();
   };
 
-  const parseAndSetRA = (str) => {
-    const parts = str.trim().split(':');
-    if (parts.length >= 3) {
-      setRaH(parts[0].replace(/\D/g, '').slice(0, 2));
-      setRaM(parts[1].replace(/\D/g, '').slice(0, 2));
-      setRaS(parts[2].match(/^\d+(\.\d+)?/)?.[0] || '');
-      raMRef.current?.focus();
+  const parseAndSetRA = (input) => {
+    let str = input.trim();
+    // Replace any non-digit/non-dot separators with colon
+    str = str.replace(/[^\d.]+/g, ":");
+
+    const parts = str.split(":").map(p => p.trim()).filter(p => p !== "");
+    if (parts.length === 0) {
+      toast.error("Invalid RA format");
+      return;
     }
+
+    let h = parts[0] || "0";
+    let m = parts[1] || "0";
+    let s = parts[2] || "0";
+
+    // Handle decimal minutes like 01:1.0 -> 01m 0s
+    if (m.includes(".")) {
+      const [minInt, minDec] = m.split(".");
+      m = minInt.padStart(2, "0");
+      s = (parseFloat("0." + minDec) * 60).toFixed(2);
+    }
+
+    setRaH(h.padStart(2, "0"));
+    setRaM(m.padStart(2, "0"));
+    setRaS(parseFloat(s).toFixed(2));
   };
 
-  const parseAndSetDec = (str) => {
-    let s = str.trim();
-    if (s.startsWith('+') || s.startsWith('-')) {
-      setDecSign(s[0]);
-      s = s.slice(1);
-    } else {
-      setDecSign('+');
+  // --- Robust DEC Parser ---
+  const parseAndSetDec = (input) => {
+    let s = (input || "").trim();
+
+    // Normalize minus variants and decimal comma
+    s = s.replace(/\u2212/g, "-").replace(/,/g, ".");
+
+    // Get sign, then strip it from the working string
+    let sign = "+";
+    if (/^[+\-]/.test(s)) {
+      sign = s[0];
+      s = s.slice(1).trim();
     }
-    const parts = s.split(':');
-    if (parts.length >= 3) {
-      setDecD(parts[0].replace(/\D/g, '').slice(0, 2));
-      setDecM(parts[1].replace(/\D/g, '').slice(0, 2));
-      setDecS(parts[2].match(/^\d+(\.\d+)?/)?.[0] || '');
-      decMRef.current?.focus();
+
+    // Replace any of these separators with spaces:
+    // degree (° U+00B0) OR masculine ordinal (º U+00BA), primes (straight/curly), double-quotes,
+    // and colons. Also collapse multiple spaces.
+    s = s
+      .replace(/[\u00B0\u00BA]/g, " ")      // degree symbols
+      .replace(/[′’']/g, " ")               // minutes marks
+      .replace(/[″”"]/g, " ")               // seconds marks
+      .replace(/:/g, " ")                   // colons
+      .replace(/\s+/g, " ")                 // collapse spaces
+      .trim();
+
+    // Extract numbers in order (deg, min, sec)
+    const nums = s.match(/\d+(?:\.\d+)?/g) || [];
+
+    let d = nums[0] || "0";
+    let m = nums[1] || "0";
+    let sec = nums[2] || "0";
+
+    // If minutes are decimal (e.g. "02.5"), convert fractional part to seconds
+    if (m.includes(".")) {
+      const minVal = parseFloat(m) || 0;
+      const minInt = Math.trunc(minVal);
+      const fracSec = (minVal - minInt) * 60;
+      m = String(minInt);
+      // Only use seconds we computed if the user didn't already provide a 3rd number
+      if (nums.length < 3) sec = fracSec.toFixed(2);
     }
+
+    // Clean & pad
+    d = d.replace(/\D/g, "").padStart(2, "0");
+    m = m.replace(/\D/g, "").padStart(2, "0");
+
+    let secNum = parseFloat(sec);
+    if (isNaN(secNum)) secNum = 0;
+
+    setDecSign(sign);
+    setDecD(d);
+    setDecM(m);
+    setDecS(secNum.toFixed(2));
+
+    // optional: move focus forward
+    decMRef.current?.focus();
   };
 
   const handleIntInput = (setter, maxLen, nextRef) => (e) => {
