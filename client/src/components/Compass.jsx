@@ -3,9 +3,16 @@ import React from 'react';
 const FULL_CIRCLE = 360;
 const TICK_COUNT = 60; // 6-degree tick marks
 
+// Mapping to match manual telescope behavior: east <-> west reversed
+const MANUAL_DIR_MAP = {
+  north: 'north',
+  south: 'south',
+  east: 'west',   // reverse
+  west: 'east',   // reverse
+};
+
 export default function Compass({ activeDirections = [] }) {
   // Compute direction angle (degrees) from activeDirections
-  // Supports combinations like: ['north'], ['north', 'east'] etc.
   const directionToAngle = {
     north: 0,
     'north-east': 45,
@@ -17,15 +24,18 @@ export default function Compass({ activeDirections = [] }) {
     'north-west': 315,
   };
 
+  // Map activeDirections to manual telescope behavior
+  const mappedDirections = activeDirections.map((d) => MANUAL_DIR_MAP[d] || d);
+
   // Determine single combined direction if possible
-  const dirSet = new Set(activeDirections);
+  const dirSet = new Set(mappedDirections);
   let pointerAngle = null;
 
   if (dirSet.has('north') && dirSet.has('east')) pointerAngle = directionToAngle['north-east'];
   else if (dirSet.has('north') && dirSet.has('west')) pointerAngle = directionToAngle['north-west'];
   else if (dirSet.has('south') && dirSet.has('east')) pointerAngle = directionToAngle['south-east'];
   else if (dirSet.has('south') && dirSet.has('west')) pointerAngle = directionToAngle['south-west'];
-  else if (activeDirections.length === 1) pointerAngle = directionToAngle[activeDirections[0]];
+  else if (mappedDirections.length === 1) pointerAngle = directionToAngle[mappedDirections[0]];
 
   // Generate tick marks
   const ticks = [];
@@ -88,7 +98,6 @@ export default function Compass({ activeDirections = [] }) {
       {/* Needle */}
       {pointerAngle !== null && (
         <g transform={`rotate(${pointerAngle}, 80, 80)`}>
-          {/* Red needle pointing outwards */}
           <line
             x1={80}
             y1={80}
@@ -98,11 +107,9 @@ export default function Compass({ activeDirections = [] }) {
             strokeWidth={3}
             strokeLinecap="round"
           />
-          {/* Base circle */}
           <circle cx={80} cy={80} r={7} fill="#d53f3f" />
         </g>
       )}
-      {/* Center pivot circle */}
       <circle cx={80} cy={80} r={5} fill="#444" />
     </svg>
   );

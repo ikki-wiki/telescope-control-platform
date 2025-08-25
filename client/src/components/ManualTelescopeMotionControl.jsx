@@ -18,18 +18,26 @@ const KEY_TO_DIR = {
   " ": "stop", // Space bar -> stop
 };
 
+// Map directions for toast/label to match telescope manual behavior
+const MANUAL_LABEL_MAP = {
+  north: "North",
+  south: "South",
+  east: "West", // reversed
+  west: "East", // reversed
+};
+
 const directionLabel = (dirs) => {
   if (dirs.length === 0) return "";
-  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const northSouth = dirs.filter((d) => d === "north" || d === "south");
   const eastWest = dirs.filter((d) => d === "east" || d === "west");
+  const cap = (s) => MANUAL_LABEL_MAP[s] || s.charAt(0).toUpperCase() + s.slice(1);
   return [...northSouth, ...eastWest].map(cap).join("-");
 };
 
 const MIN_ALTITUDE = 0;
 const MAX_ALTITUDE = 58;
 
-export default function TelescopeGamepad() {
+export default function ManualTelescopeMotionControl() {
   const [activeDirections, setActiveDirections] = useState([]);
   const [currentAltitude, setCurrentAltitude] = useState(null);
   const [isNorthDisabled, setIsNorthDisabled] = useState(false);
@@ -88,7 +96,6 @@ export default function TelescopeGamepad() {
 
       e.preventDefault();
 
-      // Ignore keydown if direction is blocked
       if ((dir === "north" && isNorthDisabled) || (dir === "south" && isSouthDisabled)) {
         return;
       }
