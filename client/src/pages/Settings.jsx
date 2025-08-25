@@ -15,24 +15,19 @@ export default function Settings() {
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className={cardClasses}>
-          <h2 className="text-xl font-semibold mb-4">Date and Time</h2>
-          <DateTimeControl />
+          <h2 className="text-xl font-semibold mb-4">Site</h2>
+          <SiteInfoManager />
         </div>
         <div className="grid md:grid-rows-1 lg:grid-rows-1 gap-4">
+          <div className={cardClasses}>
+            <h2 className="text-xl font-semibold mb-4">Date & Time</h2>
+            <DateTimeControl />
+          </div>
           <div className={cardClasses}>
             <h2 className="text-xl font-semibold mb-4">Slew Rate</h2>
             <SlewRateSelector />
           </div>
-          <div className={cardClasses}>
-            <h2 className="text-xl font-semibold mb-4">Focuser Control</h2>
-            <FocuserControl />
-          </div>
         </div>
-      </section>
-
-      <section className={`${cardClasses} flex flex-col space-y-6`}>
-        <h2 className="text-xl font-semibold">Site</h2>
-          <SiteInfoManager />
       </section>
     </div>
   );
