@@ -37,12 +37,12 @@ export default function CurrentTelescopePosition() {
   };
 
   const formatAlt = (alt) => {
-    const sign = alt >= 0 ? '+' : '-';
-    return `${sign}${Math.abs(alt).toFixed(1)}°`;
+    const sign = alt > 0 ? '+' : alt < 0 ? '-' : '';
+    return `${sign}${Math.abs(alt).toFixed(2)}°`;
   };
 
   const formatAz = (az) => {
-    return `${az.toFixed(1)}°`;
+    return `${az.toFixed(2)}°`;
   };
 
   useEffect(() => {
