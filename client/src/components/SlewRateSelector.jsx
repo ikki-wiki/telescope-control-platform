@@ -32,6 +32,7 @@ export default function SlewRateSelector() {
       const { rates, current } = await getSlewRate();
       setAvailableRates(rates);
       setSelectedRate(current);
+      toast.success("Slew rate fetched successfully");
     } catch (err) {
       toast.error("Failed to fetch slew rate.");
       console.error(err);

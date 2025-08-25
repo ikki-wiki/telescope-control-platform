@@ -23,6 +23,7 @@ export default function DateTimeControl() {
           setNewTime(time);
           setOffset(parseFloat(offset).toFixed(2));
           setNewOffset(parseFloat(offset).toFixed(2));
+          toast.success('Current date, time and offset fetched successfully');
         }
       } catch (err) {
         console.error('Failed to fetch current date, time and offset:', err);
