@@ -91,6 +91,15 @@ export default function ManualTelescopeMotionControl() {
   // Keyboard listeners
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Ignore key events when typing in input/textarea
+      if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.isContentEditable
+      ) {
+        return;
+      }
+
       const dir = KEY_TO_DIR[e.key];
       if (!dir) return;
 
@@ -104,10 +113,20 @@ export default function ManualTelescopeMotionControl() {
     };
 
     const handleKeyUp = (e) => {
+      // Ignore key events when typing in input/textarea
+      if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.isContentEditable
+      ) {
+        return;
+      }
+
       const dir = KEY_TO_DIR[e.key];
       if (!dir) return;
 
       e.preventDefault();
+
       if (dir !== "stop") {
         deactivateDirection(dir);
       }
