@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getSiteInfo, setSiteInfo } from '../api/telescopeAPI';
 import { toast } from 'react-hot-toast';
 
-export default function SiteInfoManager({ activeSiteId }) {
+export default function SiteInfoManager() {
   const [currentInfo, setCurrentInfo] = useState(null);
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
@@ -61,7 +61,7 @@ export default function SiteInfoManager({ activeSiteId }) {
   }
 
   useEffect(() => {
-    const fetchSiteInfo = async () => {
+    const fetchSite = async () => {
       try {
         const data = await getSiteInfo();
         setCurrentInfo(data.site);
@@ -74,8 +74,8 @@ export default function SiteInfoManager({ activeSiteId }) {
         toast.error('Failed to fetch site coordinates');
       }
     };
-    fetchSiteInfo();
-  }, [activeSiteId]);
+    fetchSite();
+  }, []);
 
   const handleSubmit = async () => {
     setIsLoading(true);

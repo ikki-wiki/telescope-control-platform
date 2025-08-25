@@ -1,17 +1,10 @@
-import { useState } from 'react';
-import DateTimeControl from '../components/DateTimeControl';
-import SlewRateSelector from '../components/SlewRateSelector';
-import FocuserControl from '../components/FocuserControl';
-import SiteSelector from '../components/SiteSelector';
-import SiteInfoManager from '../components/SiteInfoManager';
+import { useState, useEffect } from "react";
+import DateTimeControl from "../components/DateTimeControl";
+import SlewRateSelector from "../components/SlewRateSelector";
+import FocuserControl from "../components/FocuserControl";
+import SiteInfoManager from "../components/SiteInfoManager";
 
 export default function Settings() {
-  const [activeSiteId, setActiveSiteId] = useState(1);
-
-  function handleSiteChange(siteId) {
-    setActiveSiteId(siteId);
-  }
-
   const cardClasses =
     "border border-gray-400 rounded-2xl p-6 shadow-sm bg-gray-900 " +
     "transition transform hover:bg-gray-800 hover:shadow-lg hover:border-gray-500 hover:scale-[1.02]";
@@ -39,8 +32,7 @@ export default function Settings() {
 
       <section className={`${cardClasses} flex flex-col space-y-6`}>
         <h2 className="text-xl font-semibold">Site</h2>
-        <SiteSelector onSiteChange={handleSiteChange} />
-        <SiteInfoManager activeSiteId={activeSiteId} />
+          <SiteInfoManager />
       </section>
     </div>
   );

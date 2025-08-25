@@ -280,38 +280,6 @@ export async function setSiteInfo(site) {
   return await res.json();
 }
 
-export async function getSiteSelection() {
-  const res = await fetch(`${BASE_URL}/site/selection`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
-  if (!res.ok) throw new Error('Failed to fetch site selection');
-  return res.json(); // Should return: { status: 'success', sites: [{id: 1, state: 'On'}, ...] }
-}
-
-export async function setSiteSelection(siteId) {
-  const res = await fetch(`${BASE_URL}/site/selection`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ siteId }),
-  });
-  if (!res.ok) throw new Error('Failed to set site selection');
-  return res.json();
-}
-
-export async function getSiteName() {
-  const res = await fetch(`${BASE_URL}/site/name`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
-  if (!res.ok) throw new Error('Failed to fetch site name');
-  return res.json(); // Should return: { status: 'success', name: 'LISBON' }
-}
-
-export async function setSiteName(name) {
-  const res = await fetch(`${BASE_URL}/site/name`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
-  });
-  if (!res.ok) throw new Error('Failed to set site name');
-  return res.json();
-}
-
 export async function loadSavedConfig() {
   const res = await fetch(`${BASE_URL}/config/load`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
   if (!res.ok) throw new Error('Failed to load saved config');

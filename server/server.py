@@ -491,58 +491,6 @@ def set_site_info():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/api/site/selection", methods=["GET"])
-def get_site_selection():
-    try:
-        sites = controller.get_site_selection()
-        sites = sites[:3]
-        app.logger.info(f"Sites: {sites}")
-        return jsonify({"status": "success", "sites": sites}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-
-@app.route("/api/site/selection", methods=["POST"])
-def set_site_selection():
-    data = request.get_json()
-    site_id = data.get("siteId")
-    if site_id is None:
-        return jsonify({"status": "error", "message": "siteId is required"}), 400
-
-    try:
-        controller.set_site_selection(site_id)
-        app.logger.info(f"Selected site to set: {site_id}")
-        return jsonify({"status": "success"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-
-@app.route("/api/site/name", methods=["GET"])
-def get_site_name():
-    try:
-        site_name = controller.get_site_name()
-        if not site_name:
-            return jsonify({"status": "error", "message": "Site Name property not available"}), 400
-
-        return jsonify({"status": "success", "name": site_name}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-
-@app.route("/api/site/name", methods=["POST"])
-def set_site_name():
-    data = request.get_json()
-    name = data.get("name")
-    if name is None:
-        return jsonify({"status": "error", "message": "Name is required"}), 400
-
-    try:
-        controller.set_site_name(name)
-        app.logger.info(f"New site name: {name}")
-        return jsonify({"status": "success"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
 @app.route("/api/config/load", methods=["GET"])
 def load_config():
     try:
