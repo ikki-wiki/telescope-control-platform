@@ -685,15 +685,18 @@ class IndiTelescopeController(BaseTelescopeController):
         if not focuser_speed_prop:
             raise RuntimeError("Focuser Speed property not found")
 
-        speed = {"speed": [item.value for item in focuser_speed_prop]}
+        speed = {"speed": item.value for item in focuser_speed_prop}
+        self.logger.info(f"Speed: {speed}")
         return speed
 
     def set_focuser_timer(self, duration):
         focuser_timer_prop = self.device.getNumber("FOCUS_TIMER")
+        self.logger.info(f"INDI timer received from set Timer: {duration}")
         if not focuser_timer_prop:
             raise RuntimeError("Focuser Timer property not found")
 
         for item in focuser_timer_prop:
+            self.logger.info(f"Item: {item.name}, Item value: {item.value}")
             item.value = duration
             self.logger.info(f"Setting {item.name} to {item.value}")
 
@@ -704,7 +707,8 @@ class IndiTelescopeController(BaseTelescopeController):
         if not focuser_timer_prop:
             raise RuntimeError("Focuser Timer property not found")
 
-        timer = {"timer": [item.value for item in focuser_timer_prop]}
+        timer = {"timer": item.value for item in focuser_timer_prop}
+        self.logger.info(f"Timer: {timer}")
         return timer
 
     def set_focuser_abort_motion(self, abort):

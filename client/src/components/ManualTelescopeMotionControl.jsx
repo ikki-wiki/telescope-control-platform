@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { moveTelescope } from "../api/telescopeAPI";
-import { getTelescopeCoordinates } from "../api/telescopeAPI";
+import { moveTelescope, getTelescopeCoordinates } from "../api/telescopeAPI";
 import { toast } from "react-hot-toast";
 import Compass from "./Compass";
 
@@ -14,8 +13,8 @@ const OPPOSITES = {
 const KEY_TO_DIR = {
   ArrowUp: "north",
   ArrowDown: "south",
-  ArrowLeft: "west",
-  ArrowRight: "east",
+  ArrowLeft: "east",
+  ArrowRight: "west",
   " ": "stop", // Space bar -> stop
 };
 
@@ -28,7 +27,7 @@ const directionLabel = (dirs) => {
 };
 
 const MIN_ALTITUDE = 0;
-const MAX_ALTITUDE = 68;
+const MAX_ALTITUDE = 58;
 
 export default function TelescopeGamepad() {
   const [activeDirections, setActiveDirections] = useState([]);
@@ -36,26 +35,25 @@ export default function TelescopeGamepad() {
   const [isNorthDisabled, setIsNorthDisabled] = useState(false);
   const [isSouthDisabled, setIsSouthDisabled] = useState(false);
 
-  // Poll telescope altitude every second
-  useEffect(() => {
-    async function fetchAltitude() {
-      try {
-        const data = await getTelescopeCoordinates();
-        if (data.status === "success") {
-          const alt = data.alt;
-          setCurrentAltitude(alt);
+  const fetchAltitude = async () => {
+    try {
+      const data = await getTelescopeCoordinates();
+      if (data.status === "success") {
+        const alt = data.alt;
+        setCurrentAltitude(alt);
 
-          // update disable state
-          setIsNorthDisabled(alt >= MAX_ALTITUDE);
-          setIsSouthDisabled(alt <= MIN_ALTITUDE);
-        }
-      } catch (e) {
-        console.error("Failed to fetch altitude", e);
+        setIsNorthDisabled(alt >= MAX_ALTITUDE);
+        setIsSouthDisabled(alt <= MIN_ALTITUDE);
       }
+    } catch (e) {
+      console.error("Failed to fetch altitude", e);
     }
+  };
 
+  // Poll telescope altitude
+  useEffect(() => {
     fetchAltitude();
-    const pollInterval = setInterval(fetchAltitude, 1000);
+    const pollInterval = setInterval(fetchAltitude, 200);
     return () => clearInterval(pollInterval);
   }, []);
 
@@ -64,9 +62,8 @@ export default function TelescopeGamepad() {
       setActiveDirections([]);
       return;
     }
-
     if ((dir === "north" && isNorthDisabled) || (dir === "south" && isSouthDisabled)) {
-      return;
+      return; // ignore blocked directions
     }
 
     setActiveDirections((prev) => {
@@ -86,22 +83,26 @@ export default function TelescopeGamepad() {
   // Keyboard listeners
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (KEY_TO_DIR[e.key] !== undefined) {
-        e.preventDefault();
-        const dir = KEY_TO_DIR[e.key];
-        if ((dir === "north" && isNorthDisabled) || (dir === "south" && isSouthDisabled)) {
-          return;
-        }
-        activateDirection(dir);
+      const dir = KEY_TO_DIR[e.key];
+      if (!dir) return;
+
+      e.preventDefault();
+
+      // Ignore keydown if direction is blocked
+      if ((dir === "north" && isNorthDisabled) || (dir === "south" && isSouthDisabled)) {
+        return;
       }
+
+      activateDirection(dir);
     };
 
     const handleKeyUp = (e) => {
-      if (KEY_TO_DIR[e.key] !== undefined) {
-        e.preventDefault();
-        if (KEY_TO_DIR[e.key] !== "stop") {
-          deactivateDirection(KEY_TO_DIR[e.key]);
-        }
+      const dir = KEY_TO_DIR[e.key];
+      if (!dir) return;
+
+      e.preventDefault();
+      if (dir !== "stop") {
+        deactivateDirection(dir);
       }
     };
 
@@ -121,32 +122,33 @@ export default function TelescopeGamepad() {
       return;
     }
 
-    const label = directionLabel(activeDirections);
     const latestDirection = activeDirections[activeDirections.length - 1];
+    const label = directionLabel(activeDirections);
 
+    // Altitude limit safety
     if (latestDirection === "north" && isNorthDisabled) {
+      setActiveDirections((prev) => prev.filter((d) => d !== "north"));
+      moveTelescope("stop");
       toast.dismiss("direction");
       toast.error("Reached maximum altitude limit", { id: "direction" });
       return;
     }
     if (latestDirection === "south" && isSouthDisabled) {
+      setActiveDirections((prev) => prev.filter((d) => d !== "south"));
+      moveTelescope("stop");
       toast.dismiss("direction");
       toast.error("Reached minimum altitude limit", { id: "direction" });
       return;
     }
 
-    // If at altitude limit and trying to move East/West
+    // If trying to move East/West while stuck at limit
     if ((latestDirection === "east" || latestDirection === "west") &&
         (isNorthDisabled || isSouthDisabled)) {
       toast.dismiss("direction");
       if (isNorthDisabled) {
-        toast.error("Above maximum altitude limit: move the telescope South", {
-          id: "direction",
-        });
+        toast.error("Above maximum altitude limit: move South", { id: "direction" });
       } else if (isSouthDisabled) {
-        toast.error("Below minimum altitude limit: move the telescope North", {
-          id: "direction",
-        });
+        toast.error("Below minimum altitude limit: move North", { id: "direction" });
       }
       return;
     }
@@ -187,10 +189,10 @@ export default function TelescopeGamepad() {
 
           <button
             aria-label="Move West"
-            className={`${getBtnClass("west")} col-start-1`}
-            onMouseDown={() => activateDirection("west")}
-            onMouseUp={() => deactivateDirection("west")}
-            onMouseLeave={() => deactivateDirection("west")}
+            className={`${getBtnClass("east")} col-start-1`}
+            onMouseDown={() => activateDirection("east")}
+            onMouseUp={() => deactivateDirection("east")}
+            onMouseLeave={() => deactivateDirection("east")}
           >
             W
           </button>
@@ -205,10 +207,10 @@ export default function TelescopeGamepad() {
 
           <button
             aria-label="Move East"
-            className={`${getBtnClass("east")} col-start-3`}
-            onMouseDown={() => activateDirection("east")}
-            onMouseUp={() => deactivateDirection("east")}
-            onMouseLeave={() => deactivateDirection("east")}
+            className={`${getBtnClass("west")} col-start-3`}
+            onMouseDown={() => activateDirection("west")}
+            onMouseUp={() => deactivateDirection("west")}
+            onMouseLeave={() => deactivateDirection("west")}
           >
             E
           </button>

@@ -367,7 +367,7 @@ export async function setFocuserMotion(direction) {
 }
 
 export async function abortFocuserMotion(abort) {
-  const res = await fetch(`${BASE_URL}/focuser/motion/abort`, {
+  const res = await fetch(`${BASE_URL}/focuser/abort`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ abort }),

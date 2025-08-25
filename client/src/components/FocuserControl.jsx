@@ -21,8 +21,14 @@ export default function FocuserControl() {
       try {
         const speed = await getFocuserSpeed();
         const timer = await getFocuserTimer();
-        if (speed !== undefined) setSpeed(speed);
-        if (timer !== undefined) setTimer(timer);
+        if (speed !== undefined) {
+          setSpeed(speed.speed); 
+          toast.success('Focuser speed loaded')
+        }
+        if (timer !== undefined){
+          setTimer(timer.timer);
+          toast.success('Focuser movement duration loaded')
+        } 
       } catch (err) {
         console.error('Failed to fetch focuser settings:', err);
         toast.error('Failed to fetch focuser settings');
@@ -44,8 +50,8 @@ export default function FocuserControl() {
     setIsLoading(true);
     const toastId = toast.loading('Moving focuser...');
     try {
-      const speedResult = await setFocuserSpeed(speed);
-      const timerResult = await setFocuserTimer(timer);
+      const speedResult = await setFocuserSpeed(parseFloat(speed));
+      const timerResult = await setFocuserTimer(parseFloat(timer));
       const moveResult = await setFocuserMotion(direction);
 
       if (
@@ -148,7 +154,6 @@ export default function FocuserControl() {
             onClick={handleFocusMotion}           // Tap mode
             onMouseDown={handleHoldStart}         // Hold start
             onMouseUp={stopMotion}                // Stop on release
-            onMouseLeave={stopMotion}             // Stop if mouse leaves
             disabled={isLoading}
             className={`w-full mt-4 ${isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold rounded py-2 px-4 transition`}
           >

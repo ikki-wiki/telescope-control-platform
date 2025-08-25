@@ -15,7 +15,7 @@ iers.conf.auto_download = False
 iers.conf.auto_max_age = None
 
 MIN_ALTITUDE = 0  # degrees
-MAX_ALTITUDE = 68  # degrees
+MAX_ALTITUDE = 58  # degrees
 
 app = Flask(__name__)
 CORS(app)
@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Load once at startup  
 LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
-controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
 
 try:
     controller.connect()
@@ -554,7 +554,7 @@ def load_config():
 @app.route("/api/focuser/motion", methods=["POST"])
 def set_focuser_motion():
     data = request.get_json()
-    motion = data.get("motion")
+    motion = data.get("direction")
     if motion is None:
         return jsonify({"status": "error", "message": "Motion is required"}), 400
 
@@ -599,6 +599,7 @@ def set_focuser_speed():
 def get_focuser_timer():
     try:
         timer = controller.get_focuser_timer()
+        app.logger.info(f"Server loaded timer: {timer}")
         return jsonify({"status": "success", **timer})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
@@ -607,6 +608,7 @@ def get_focuser_timer():
 def set_focuser_timer():
     data = request.get_json()
     timer = data.get("timer")
+    app.logger.info(f"Server Timer: {timer}")
     if timer is None:
         return jsonify({"status": "error", "message": "Timer is required"}), 400
 
