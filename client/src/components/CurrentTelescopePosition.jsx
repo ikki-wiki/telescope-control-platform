@@ -66,7 +66,7 @@ export default function CurrentTelescopePosition() {
       <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-base">
         {/* RA (top-left) */}
         <div>
-          <span className="text-neutral-400">RA:</span>{' '}
+          <span className="text-neutral-400">Right Ascension:</span>{' '}
           <AnimatePresence mode="wait">
             <motion.span key={currentRa} {...animateProps} className="font-mono">
               {rawRAtoHMS(currentRa)}
@@ -86,7 +86,7 @@ export default function CurrentTelescopePosition() {
 
         {/* Declination (bottom-left) */}
         <div>
-          <span className="text-neutral-400">Dec:</span>{' '}
+          <span className="text-neutral-400">Declination:</span>{' '}
           <AnimatePresence mode="wait">
             <motion.span key={currentDec} {...animateProps} className="font-mono">
               {rawDECtoDMS(currentDec)}
