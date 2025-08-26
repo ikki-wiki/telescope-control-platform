@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Load once at startup  
 LOCAL_CATALOG = json.loads(Path("catalog.json").read_text())
 
-controller = IndiTelescopeController(host="localhost", port=7624, device_name="LX200 Autostar")
+controller = IndiTelescopeController(host="localhost", port=7624, device_name="Telescope Simulator")
 
 try:
     controller.connect()

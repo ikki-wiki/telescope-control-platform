@@ -48,13 +48,15 @@ export default function SiteInfoManager() {
       degrees += 1;
     }
 
-    const direction = isLatitude ? (decimal >= 0 ? 'N' : 'S') : (decimal >= 0 ? 'E' : 'W');
+    const direction = isLatitude
+      ? decimal >= 0 ? 'N' : 'S'
+      : decimal >= 0 ? 'E' : 'W';
     return `${degrees}° ${minutes}' ${seconds.toFixed(2)}" ${direction}`;
   }
 
-  function east360ToSigned(decimal, isLatitude = false) {
+  // Convert backend east-positive (0–360) to signed range (–180…180)
+  function east360ToSigned(decimal) {
     if (typeof decimal !== 'number' || isNaN(decimal)) return NaN;
-    if (isLatitude) return decimal;
     let lon = ((decimal % 360) + 360) % 360;
     if (lon > 180) lon -= 360;
     return lon;
@@ -66,7 +68,7 @@ export default function SiteInfoManager() {
         const data = await getSiteInfo();
         setCurrentInfo(data.site);
         setLatitude(data.site.latitude.toString());
-        setLongitude(data.site.longitude.toString());
+        setLongitude(east360ToSigned(data.site.longitude).toString());
         setElevation(data.site.elevation.toString());
         toast.success('Site coordinates loaded successfully');
       } catch (err) {
@@ -90,6 +92,7 @@ export default function SiteInfoManager() {
         return;
       }
 
+      // backend expects longitude east-positive 0–360
       if (parsedLon < 0) parsedLon = 360 + parsedLon;
 
       await setSiteInfo({
@@ -100,6 +103,9 @@ export default function SiteInfoManager() {
 
       const updatedInfo = await getSiteInfo();
       setCurrentInfo(updatedInfo.site);
+      setLatitude(updatedInfo.site.latitude.toString());
+      setLongitude(east360ToSigned(updatedInfo.site.longitude).toString());
+      setElevation(updatedInfo.site.elevation.toString());
       toast.success('Site coordinates updated successfully');
     } catch (err) {
       console.error(err);
@@ -114,11 +120,13 @@ export default function SiteInfoManager() {
         {currentInfo ? (
           <>
             <strong>Latitude:</strong><br />
-            • East-positive (0–360 or signed): {currentInfo.latitude.toFixed(4)}<br />
-            • N/S format: {decimalToDMS(currentInfo.latitude, true)}<br />
+            • Decimal degrees (–90…+90): {currentInfo.latitude.toFixed(4)}°<br />
+            • DMS format: {decimalToDMS(currentInfo.latitude, true)}<br />
+
             <strong>Longitude:</strong><br />
-            • East-positive (INDI raw): {currentInfo.longitude.toFixed(4)}<br />
-            • Signed W/E format: {decimalToDMS(east360ToSigned(currentInfo.longitude, false), false)}<br />
+            • Decimal degrees (–180…+180): {east360ToSigned(currentInfo.longitude).toFixed(4)}°<br />
+            • DMS format: {decimalToDMS(east360ToSigned(currentInfo.longitude), false)}<br />
+
             <strong>Elevation:</strong> {currentInfo.elevation.toFixed(2)} m
           </>
         ) : (
@@ -133,7 +141,7 @@ export default function SiteInfoManager() {
           id="latitude"
           value={latitude}
           onChange={(e) => setLatitude(e.target.value)}
-          placeholder="e.g., 32.65 or 32° 39' N or 32 39 0 N"
+          placeholder="e.g., 32.65 or 32° 39' N or -32.65"
           className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
         />
       </div>
@@ -145,7 +153,7 @@ export default function SiteInfoManager() {
           id="longitude"
           value={longitude}
           onChange={(e) => setLongitude(e.target.value)}
-          placeholder="e.g., -16.91 or 16° 55' W"
+          placeholder="e.g., -16.91 or 16° 55' W or 16.91 E"
           className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
         />
       </div>
