@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { parkTelescope, unparkTelescope } from "../api/telescopeAPI";
 import { toast } from "react-hot-toast";
+import TooltipWrapper from "./TooltipWrapper";
 
 export default function ParkUnpark() {
   const [isParked, setIsParked] = useState(false);
@@ -47,18 +48,20 @@ export default function ParkUnpark() {
     <section className="max-w-md mx-auto">
       {/* Button to trigger confirmation modal */}
       <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={() => setShowParkConfirm(true)}
-          disabled={isLoading || isParked}
-          className={`${
-            isParked || isLoading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-700/50"
-          } text-white px-6 py-3 rounded font-semibold transition text-lg`}
-        >
-          Park Telescope
-        </button>
+        <TooltipWrapper content="Park the telescope. After pressing park, the telescope will move to its safe position and won't allow any other actions.">
+          <button
+            type="button"
+            onClick={() => setShowParkConfirm(true)}
+            disabled={isLoading || isParked}
+            className={`${
+              isParked || isLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-700/50"
+            } text-white px-6 py-3 rounded font-semibold transition text-lg`}
+          >
+            Park Telescope
+          </button>
+        </TooltipWrapper>
         {/*<button
           type="button"
           onClick={handleUnpark}

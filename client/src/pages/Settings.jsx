@@ -3,6 +3,7 @@ import DateTimeControl from "../components/DateTimeControl";
 import SlewRateSelector from "../components/SlewRateSelector";
 import FocuserControl from "../components/FocuserControl";
 import SiteInfoManager from "../components/SiteInfoManager";
+import TooltipWrapper from "../components/TooltipWrapper";
 
 export default function Settings() {
   const cardClasses =
@@ -23,8 +24,11 @@ export default function Settings() {
             <h2 className="text-xl font-semibold mb-4">Date & Time</h2>
             <DateTimeControl />
           </div>
+          
           <div className={cardClasses}>
-            <h2 className="text-xl font-semibold mb-4">Slew Rate</h2>
+            <TooltipWrapper content="The speed at which the telescope moves to a target.">
+              <h2 className="text-xl font-semibold mb-4">Slew Rate</h2>
+            </TooltipWrapper>
             <SlewRateSelector />
           </div>
         </div>

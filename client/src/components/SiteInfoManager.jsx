@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getSiteInfo, setSiteInfo } from '../api/telescopeAPI';
 import { toast } from 'react-hot-toast';
+import TooltipWrapper from './TooltipWrapper';
 
 export default function SiteInfoManager() {
   const [currentInfo, setCurrentInfo] = useState(null);
@@ -119,15 +120,22 @@ export default function SiteInfoManager() {
       <p className="mb-4">
         {currentInfo ? (
           <>
-            <strong>Latitude:</strong><br />
-            • Decimal degrees (–90…+90): {currentInfo.latitude.toFixed(4)}°<br />
+          <TooltipWrapper content="The latitude of the observation site. Positive values indicate locations in the Northern Hemisphere, while negative values indicate locations in the Southern Hemisphere.">
+            <strong>Latitude:</strong>
+          </TooltipWrapper>
+          <br />
             • DMS format: {decimalToDMS(currentInfo.latitude, true)}<br />
-
-            <strong>Longitude:</strong><br />
-            • Decimal degrees (–180…+180): {east360ToSigned(currentInfo.longitude).toFixed(4)}°<br />
+            • Decimal degrees (–90…+90): {currentInfo.latitude.toFixed(3)}°<br />
+          <TooltipWrapper content="The longitude of the observation site. Positive values indicate locations in the Eastern Hemisphere, while negative values indicate locations in the Western Hemisphere.">
+            <strong>Longitude:</strong>
+          </TooltipWrapper>
+          <br />
             • DMS format: {decimalToDMS(east360ToSigned(currentInfo.longitude), false)}<br />
-
-            <strong>Elevation:</strong> {currentInfo.elevation.toFixed(2)} m
+            • Decimal degrees (–180…+180): {east360ToSigned(currentInfo.longitude).toFixed(3)}°<br />
+            <TooltipWrapper content="The elevation of the observation site, measured in meters above sea level.">
+              <strong>Elevation: </strong> 
+            </TooltipWrapper>
+            {currentInfo.elevation.toFixed(2)} m
           </>
         ) : (
           'Loading...'
@@ -135,7 +143,9 @@ export default function SiteInfoManager() {
       </p>
 
       <div className="flex flex-col mb-4 w-full">
-        <label htmlFor="latitude" className="text-sm font-medium mb-1">Latitude</label>
+        <TooltipWrapper content="Input formats accepted: decimal degrees (e.g., 32.65), DMS (e.g., 32° 39' N), or negative decimal degrees (e.g., -32.65)">
+          <label htmlFor="latitude" className="text-sm font-medium mb-1">Latitude</label>
+        </TooltipWrapper>
         <input
           type="text"
           id="latitude"
@@ -147,7 +157,9 @@ export default function SiteInfoManager() {
       </div>
 
       <div className="flex flex-col mb-4 w-full">
-        <label htmlFor="longitude" className="text-sm font-medium mb-1">Longitude</label>
+        <TooltipWrapper content="Input formats accepted: decimal degrees (e.g., -16.91), DMS (e.g., 16° 55' W), or negative decimal degrees (e.g., -16.91)">
+          <label htmlFor="longitude" className="text-sm font-medium mb-1">Longitude</label>
+        </TooltipWrapper>
         <input
           type="text"
           id="longitude"
@@ -159,7 +171,9 @@ export default function SiteInfoManager() {
       </div>
 
       <div className="flex flex-col mb-4 w-full">
-        <label htmlFor="elevation" className="text-sm font-medium mb-1">Elevation (meters)</label>
+        <TooltipWrapper content="Input formats accepted: meters (e.g., 100)">
+          <label htmlFor="elevation" className="text-sm font-medium mb-1">Elevation (meters)</label>
+        </TooltipWrapper>
         <input
           type="number"
           id="elevation"

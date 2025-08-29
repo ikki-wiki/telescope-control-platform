@@ -24,7 +24,7 @@ export default function Sidebar({ activePage, setActivePage }) {
       {/* Sidebar */}
       <nav
         className={`
-          fixed top-0 left-0 h-full w-64 bg-gray-900 text-gray-100
+          fixed top-0 left-0 h-full w-50 bg-gray-900 text-gray-100
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0 md:static md:flex-shrink-0
@@ -46,7 +46,7 @@ export default function Sidebar({ activePage, setActivePage }) {
           {menuItems.map(({ icon, label }) => (
             <li
               key={label}
-              className={`flex items-center cursor-pointer px-4 py-3 hover:bg-gray-800 ${
+              className={`flex items-center cursor-pointer pl-4 py-3 hover:bg-gray-800 ${
                 activePage === label ? "bg-gray-800 font-semibold" : ""
               }`}
               onClick={() => {

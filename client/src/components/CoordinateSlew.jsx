@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import CurrentTelescopePosition from './CurrentTelescopePosition';
 import ManualTelescopeMotionControl from './ManualTelescopeMotionControl';
 import { getTelescopeCoordinates, slewToCoordinates, syncToCoordinates, resolveObject } from '../api/telescopeAPI';
+import TooltipWrapper from "./TooltipWrapper";
 
 export default function CoordinateSlew() {
   const [raH, setRaH] = useState('');
@@ -260,12 +261,18 @@ export default function CoordinateSlew() {
         parseAndSetRA(formatRA(result.ra / 15));
         parseAndSetDec(formatDEC(result.dec));
         toast.success('Object coordinates loaded');
-      } else toast.error(result.message || 'Failed to find object');
+        setErrors(prev => ({ ...prev, objectName: null }));
+      } else {
+        toast.error(result.message || 'Failed to find object');
+        setErrors(prev => ({ ...prev, objectName: 'Invalid object' }));
+      }
     } catch (error) {
       console.error(error);
       toast.error('Failed to find object');
+      setErrors(prev => ({ ...prev, objectName: 'Invalid object' }));
     }
   };
+
 
   const isInputComplete =
     raH.trim() !== '' &&
@@ -282,22 +289,31 @@ export default function CoordinateSlew() {
       
       {/* 2. Object lookup */}
       <div className="mt-4">
+        <label className="font-medium block mb-1" htmlFor="objectName">Search for object coordinates</label>
         <input
           type="text"
+          id="objectName"
           value={objectName}
-          onChange={(e) => setObjectName(e.target.value)}
+          onChange={(e) => {
+            setObjectName(e.target.value);
+            setErrors(prev => ({ ...prev, objectName: null }));
+          }}
           placeholder="Object name (e.g. Vega, Jupiter, M42)"
-          className="border border-gray-300 rounded px-3 py-2 w-full"
-        />
-        <button
-          onClick={() => handleResolveObject(objectName)}
-          disabled={!objectName}
-          className={`mt-2 w-full py-2 rounded font-semibold text-white transition ${
-            !objectName
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
+          className={`border rounded px-3 py-2 w-full transition ${
+            errors.objectName ? 'border-2 border-red-500' : 'border border-gray-300'
           }`}
-        >Load object coordinates</button>
+        />
+        <TooltipWrapper content="Loads the coordinates of the specified object into the input fields">
+          <button
+            onClick={() => handleResolveObject(objectName)}
+            disabled={!objectName}
+            className={`mt-2 w-full py-2 rounded font-semibold text-white transition ${
+              !objectName
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >Load coordinates</button>
+        </TooltipWrapper>
       </div>
 
       {/* 3. Manual coordinate entry */}
@@ -308,37 +324,43 @@ export default function CoordinateSlew() {
         <div>
           <span className="font-medium block mb-1">Right Ascension (HH:MM:SS.SS)</span>
           <div className="flex gap-2">
-            <input
-              type="text"
-              maxLength={2}
-              placeholder="HH"
-              value={raH}
-              onChange={handleIntInput(setRaH, 2, raMRef)}
-              onPaste={handleRaPaste}
-              className="w-full border rounded px-2 py-1"
-              disabled={isSlewing || isSyncing}
-            />
-            <input
-              type="text"
-              maxLength={2}
-              placeholder="MM"
-              value={raM}
-              ref={raMRef}
-              onChange={handleIntInput(setRaM, 2, raSRef)}
-              onPaste={handleRaPaste}
-              className="w-full border rounded px-2 py-1"
-              disabled={isSlewing || isSyncing}
-            />
-            <input
-              type="text"
-              placeholder="SS.S"
-              value={raS}
-              ref={raSRef}
-              onChange={handleSecondsInput(setRaS)}
-              onPaste={handleRaPaste}
-              className="w-full border rounded px-2 py-1"
-              disabled={isSlewing || isSyncing}
-            />
+            <TooltipWrapper content="Hours">
+              <input
+                type="text"
+                maxLength={2}
+                placeholder="HH"
+                value={raH}
+                onChange={handleIntInput(setRaH, 2, raMRef)}
+                onPaste={handleRaPaste}
+                className="w-full border rounded px-2 py-1"
+                disabled={isSlewing || isSyncing}
+              />
+            </TooltipWrapper>
+            <TooltipWrapper content="Minutes">
+              <input
+                type="text"
+                maxLength={2}
+                placeholder="MM"
+                value={raM}
+                ref={raMRef}
+                onChange={handleIntInput(setRaM, 2, raSRef)}
+                onPaste={handleRaPaste}
+                className="w-full border rounded px-2 py-1"
+                disabled={isSlewing || isSyncing}
+              />
+            </TooltipWrapper>
+            <TooltipWrapper content="Seconds">
+              <input
+                type="text"
+                placeholder="SS.S"
+                value={raS}
+                ref={raSRef}
+                onChange={handleSecondsInput(setRaS)}
+                onPaste={handleRaPaste}
+                className="w-full border rounded px-2 py-1"
+                disabled={isSlewing || isSyncing}
+              />
+            </TooltipWrapper>
           </div>
           <div className="text-sm text-red-500 mt-1">
             {errors.raH || errors.raM || errors.raS}
@@ -349,47 +371,55 @@ export default function CoordinateSlew() {
         <div>
           <span className="font-medium block mb-1">Declination (+/-DD° MM' SS.SS")</span>
           <div className="flex gap-2">
-            <select
-              value={decSign}
-              onChange={(e) => setDecSign(e.target.value)}
-              className="w-20 border rounded px-2 py-1 bg-gray-900 text-gray-100"
-              disabled={isSlewing || isSyncing}
-            >
-              <option value="+">+</option>
-              <option value="-">−</option>
-            </select>
-            <input
-              type="text"
-              maxLength={2}
-              placeholder="DD"
-              value={decD}
-              ref={decDRef}
-              onChange={handleIntInput(setDecD, 2, decMRef)}
-              onPaste={handleDecPaste}
-              className="w-full border rounded px-2 py-1"
-              disabled={isSlewing || isSyncing}
-            />
-            <input
-              type="text"
-              maxLength={2}
-              placeholder="MM"
-              value={decM}
-              ref={decMRef}
-              onChange={handleIntInput(setDecM, 2, decSRef)}
-              onPaste={handleDecPaste}
-              className="w-full border rounded px-2 py-1"
-              disabled={isSlewing || isSyncing}
-            />
-            <input
-              type="text"
-              placeholder="SS.S"
-              value={decS}
-              ref={decSRef}
-              onChange={handleSecondsInput(setDecS)}
-              onPaste={handleDecPaste}
-              className="w-full border rounded px-2 py-1"
-              disabled={isSlewing || isSyncing}
-            />
+            <TooltipWrapper content="Sign">
+              <select
+                value={decSign}
+                onChange={(e) => setDecSign(e.target.value)}
+                className="w-20 border rounded px-2 py-1 bg-gray-900 text-gray-100"
+                disabled={isSlewing || isSyncing}
+              >
+                <option value="+">+</option>
+                <option value="-">−</option>
+              </select>
+            </TooltipWrapper>
+            <TooltipWrapper content="Degrees">
+              <input
+                type="text"
+                maxLength={2}
+                placeholder="DD"
+                value={decD}
+                ref={decDRef}
+                onChange={handleIntInput(setDecD, 2, decMRef)}
+                onPaste={handleDecPaste}
+                className="w-full border rounded px-2 py-1"
+                disabled={isSlewing || isSyncing}
+              />
+            </TooltipWrapper>
+            <TooltipWrapper content="Arc Minutes">
+              <input
+                type="text"
+                maxLength={2}
+                placeholder="MM"
+                value={decM}
+                ref={decMRef}
+                onChange={handleIntInput(setDecM, 2, decSRef)}
+                onPaste={handleDecPaste}
+                className="w-full border rounded px-2 py-1"
+                disabled={isSlewing || isSyncing}
+              />
+            </TooltipWrapper>
+            <TooltipWrapper content="Arc Seconds">
+              <input
+                type="text"
+                placeholder="SS.S"
+                value={decS}
+                ref={decSRef}
+                onChange={handleSecondsInput(setDecS)}
+                onPaste={handleDecPaste}
+                className="w-full border rounded px-2 py-1"
+                disabled={isSlewing || isSyncing}
+              />
+            </TooltipWrapper>
           </div>
           <div className="text-sm text-red-500 mt-1">
             {errors.decD || errors.decM || errors.decS}
@@ -397,33 +427,40 @@ export default function CoordinateSlew() {
         </div>
         </div>
         {/* 4. Fill with current position */}
-        <button
-          type="button"
-          onClick={handleFillInCurrentPosition}
-          disabled={isSyncing || isSlewing}
-          className='w-full mt-3 bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold transition'
-        >Fill with current telescope RA/DEC</button>
+        <TooltipWrapper content="Fills the input fields with the current telescope position">
+          <button
+            type="button"
+            onClick={handleFillInCurrentPosition}
+            disabled={isSyncing || isSlewing}
+            className='w-full mt-3 bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold transition'
+          >Fill in with current telescope RA/DEC</button>
+        </TooltipWrapper>
       </fieldset>
 
       {/* 5. Slew and Sync actions */}
       <div className='grid grid-cols-2 gap-4 mt-5 mb-8'>
-        <button
-          type="button"
-          onClick={() => setShowSlewConfirm(true)}
-          disabled={isSyncing || isSlewing || !isInputComplete}
-          className={`w-full ${
-            isSlewing || !isInputComplete ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-          } text-white font-semibold rounded py-2 transition`}
-        >{isSlewing ? 'Slewing...' : 'Slew to coordinates'}</button>
-        <button
-          type="button"
-          onClick={() => setShowSyncConfirm(true)}
-          disabled={isSlewing || isSyncing || !isInputComplete}
-          className={`w-full ${
-            isSyncing || !isInputComplete || isSlewing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
-          } text-white font-semibold rounded py-2 transition`}
-        >{isSyncing ? 'Syncing...' : 'Sync to coordinates'}</button>
+        <TooltipWrapper content="Moves the telescope to the specified coordinates">
+          <button
+            type="button"
+            onClick={() => setShowSlewConfirm(true)}
+            disabled={isSyncing || isSlewing || !isInputComplete}
+            className={`w-full ${
+              isSlewing || !isInputComplete ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+            } text-white font-semibold rounded py-2 transition`}
+          >{isSlewing ? 'Moving...' : 'Move to coordinates'}</button>
+          </TooltipWrapper>
+        <TooltipWrapper content="Syncs the telescope to the specified coordinates">
+          <button
+            type="button"
+            onClick={() => setShowSyncConfirm(true)}
+            disabled={isSlewing || isSyncing || !isInputComplete}
+            className={`w-full ${
+              isSyncing || !isInputComplete || isSlewing ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+            } text-white font-semibold rounded py-2 transition`}
+          >{isSyncing ? 'Syncing...' : 'Sync to coordinates'}</button>
+        </TooltipWrapper>
       </div>
+      
 
         {/* Slew Confirmation Modal */}
       {showSlewConfirm && (

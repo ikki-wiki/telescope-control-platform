@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getUTCTime, setUTCTime } from '../api/telescopeAPI';
 import { toast } from 'react-hot-toast';
+import TooltipWrapper from './TooltipWrapper';
 
 export default function DateTimeControl() {
   const [currentDate, setCurrentDate] = useState('');
@@ -96,12 +97,15 @@ export default function DateTimeControl() {
 
       <div className="flex flex-col gap-4 mt-4 sm:flex-row">
         <div className="flex flex-col w-full">
-          <label
-            htmlFor="time"
-            className="text-sm font-medium mb-1 block"
-          >
-            UTC time
-          </label>
+          <TooltipWrapper content="Coordinated Universal Time (UTC) corresponds to the time at the Prime Meridian (0° longitude) without any offset. This is not local time.">
+            <label
+              htmlFor="time"
+              className="text-sm font-medium mb-1 block"
+            >
+              UTC time
+            </label>
+          </TooltipWrapper>
+          
           <input
             type="time"
             step={1}
@@ -112,12 +116,14 @@ export default function DateTimeControl() {
           />
         </div>
         <div className="flex flex-col w-full">
+          <TooltipWrapper content="UTC offset represents the difference in hours and minutes from Coordinated Universal Time (UTC).">
           <label
             htmlFor="offset"
             className="text-sm font-medium mb-1 block"
           >
             UTC Offset
           </label>
+          </TooltipWrapper>
           <select
             id="offset"
             value={newOffset}

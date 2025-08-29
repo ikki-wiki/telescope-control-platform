@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { moveTelescope, getTelescopeCoordinates } from "../api/telescopeAPI";
 import { toast } from "react-hot-toast";
 import Compass from "./Compass";
+import TooltipWrapper from "./TooltipWrapper";
 
 const OPPOSITES = {
   north: "south",
@@ -198,62 +199,73 @@ export default function ManualTelescopeMotionControl() {
   return (
     <div className="justify-items-center">
       <Compass activeDirections={activeDirections} />
-      <div className="flex flex-col items-center space-y-6 mt-8">
+      <div className="flex flex-col items-center space-y-6 mt-4">
         <div className="grid grid-cols-3 gap-6 w-64 items-center">
-          <button
-            aria-label="Move North"
-            disabled={isNorthDisabled}
-            className={`${getBtnClass("north")} col-start-2 ${
-              isNorthDisabled ? "cursor-not-allowed bg-gray-300 opacity-50" : ""
-            }`}
-            onMouseDown={() => activateDirection("north")}
-            onMouseUp={() => deactivateDirection("north")}
-            onMouseLeave={() => deactivateDirection("north")}
-          >
-            N
-          </button>
-
-          <button
-            aria-label="Move West"
-            className={`${getBtnClass("east")} col-start-1`}
-            onMouseDown={() => activateDirection("east")}
-            onMouseUp={() => deactivateDirection("east")}
-            onMouseLeave={() => deactivateDirection("east")}
-          >
-            W
-          </button>
-
-          <button
-            aria-label="Stop Movement"
-            className={getBtnClass("stop")}
-            onClick={() => activateDirection("stop")}
-          >
-            ■
-          </button>
-
-          <button
-            aria-label="Move East"
-            className={`${getBtnClass("west")} col-start-3`}
-            onMouseDown={() => activateDirection("west")}
-            onMouseUp={() => deactivateDirection("west")}
-            onMouseLeave={() => deactivateDirection("west")}
-          >
-            E
-          </button>
-
-          <button
-            aria-label="Move South"
-            disabled={isSouthDisabled}
-            className={`${getBtnClass("south")} col-start-2 ${
-              isSouthDisabled ? "cursor-not-allowed bg-gray-300 opacity-50" : ""
-            }`}
-            onMouseDown={() => activateDirection("south")}
-            onMouseUp={() => deactivateDirection("south")}
-            onMouseLeave={() => deactivateDirection("south")}
-          >
-            S
-          </button>
+          <TooltipWrapper content="Move the telescope north">
+            <button
+              aria-label="Move North"
+              disabled={isNorthDisabled}
+              className={`${getBtnClass("north")} col-start-2 ${
+                isNorthDisabled ? "cursor-not-allowed bg-gray-300 opacity-50" : ""
+              }`}
+              onMouseDown={() => activateDirection("north")}
+              onMouseUp={() => deactivateDirection("north")}
+              onMouseLeave={() => deactivateDirection("north")}
+            >
+              N
+            </button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Move the telescope west">
+            <button
+              aria-label="Move West"
+              className={`${getBtnClass("east")} col-start-1`}
+              onMouseDown={() => activateDirection("east")}
+              onMouseUp={() => deactivateDirection("east")}
+              onMouseLeave={() => deactivateDirection("east")}
+            >
+              W
+            </button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Abort telescope movement">
+            <button
+              aria-label="Stop Movement"
+              className={getBtnClass("stop")}
+              onClick={() => activateDirection("stop")}
+            >
+              ■
+            </button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Move the telescope east">
+            <button
+              aria-label="Move East"
+              className={`${getBtnClass("west")} col-start-3`}
+              onMouseDown={() => activateDirection("west")}
+              onMouseUp={() => deactivateDirection("west")}
+              onMouseLeave={() => deactivateDirection("west")}
+            >
+              E
+            </button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Move the telescope south">
+            <button
+              aria-label="Move South"
+              disabled={isSouthDisabled}
+              className={`${getBtnClass("south")} col-start-2 ${
+                isSouthDisabled ? "cursor-not-allowed bg-gray-300 opacity-50" : ""
+              }`}
+              onMouseDown={() => activateDirection("south")}
+              onMouseUp={() => deactivateDirection("south")}
+              onMouseLeave={() => deactivateDirection("south")}
+            >
+              S
+            </button>
+          </TooltipWrapper>
         </div>
+      </div>
+      <div className="flex flex-col items-center mt-4 px-14">
+        <p className="text-gray-500 text-sm text-white text-center">
+          💡You can use arrow keys to manually move the telescope and the space key to abort movement.
+        </p>
       </div>
     </div>
   );
