@@ -45,12 +45,14 @@ const steps = [
 export function ArchitectureFlow() {
   return (
     <div className="my-12 px-4">
-      <h2 className="text-2xl font-semibold mb-6 text-center">System Architecture</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-center">
+        System Architecture
+      </h2>
 
-      {/* Desktop: Horizontal layout */}
-      <div className="hidden md:flex lg:gap-2 justify-center">
+      {/* Horizontal layout - only after 1420px */}
+      <div className="hidden [@media(min-width:1420px)]:flex gap-2 justify-center">
         {steps.map((step, i) => (
-          <div key={i} className="flex items-center lg:gap-2">
+          <div key={i} className="flex items-center gap-2">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -77,15 +79,15 @@ export function ArchitectureFlow() {
         ))}
       </div>
 
-      {/* Mobile: Vertical layout */}
-      <div className="flex flex-col md:hidden items-center gap-1">
+      {/* Vertical layout - from mobile up to 1419px */}
+      <div className="flex flex-col [@media(min-width:1420px)]:hidden items-center gap-2">
         {steps.map((step, i) => (
-          <div key={i} className="flex flex-col items-center gap-2">
+          <div key={i} className="flex flex-col items-center gap-2 w-full max-w-md">
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.25 }}
-              className={`rounded-lg text-white shadow-md px-4 py-3 w-64 ${step.color}`}
+              className={`rounded-lg text-white shadow-md px-4 py-3 w-full ${step.color}`}
             >
               <div className="flex items-center gap-2 mb-1 justify-center">
                 {step.icon}
