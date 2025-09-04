@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import CurrentTelescopePosition from './CurrentTelescopePosition';
-import ManualTelescopeMotionControl from './ManualTelescopeMotionControl';
 import { getTelescopeCoordinates, slewToCoordinates, syncToCoordinates, resolveObject } from '../api/telescopeAPI';
 import TooltipWrapper from "./TooltipWrapper";
 

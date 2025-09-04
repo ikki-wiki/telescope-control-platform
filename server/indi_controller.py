@@ -6,7 +6,7 @@ from indi_client import IndiClient
 from datetime import datetime
 
 class IndiTelescopeController(BaseTelescopeController):
-    def __init__(self, host="localhost", port=7624, device_name="Telescope Simulator"):
+    def __init__(self, host="localhost", port=7624, device_name="LX200 Autostar"):
         self.client = IndiClient()
         self.client.setServer(host, port)
         self.device = None

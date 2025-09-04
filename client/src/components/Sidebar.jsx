@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Power, GraduationCap, Crosshair, Search, Settings, Menu, Telescope } from 'lucide-react';
+import { Home, Settings, Menu, Telescope } from 'lucide-react';
 
 export default function Sidebar({ activePage, setActivePage }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

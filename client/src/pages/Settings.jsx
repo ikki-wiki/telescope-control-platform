@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import DateTimeControl from "../components/DateTimeControl";
 import SlewRateSelector from "../components/SlewRateSelector";
 import FocuserControl from "../components/FocuserControl";
