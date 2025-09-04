@@ -11,7 +11,7 @@ It consists of two parts:
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/ikki-wiki/telescope-control-platform.git
-cd telescope-control-platform-main
+cd telescope-control-platform
 ```
 
 ---
@@ -114,5 +114,6 @@ telescope-control-platform-main/
 - Sync Date and Time
 - Manual Telescope Control
 - Park the Telescope
+
 
 
