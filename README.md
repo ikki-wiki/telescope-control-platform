@@ -1,84 +1,114 @@
 # 🛰️ Telescope Control Platform
 
-A web-based control platform built with **React** (frontend) and **Flask** (backend) to interface with an LX200-compatible telescope system. Designed for deployment on a Raspberry Pi at the Observatório Astronómico da Universidade da Madeira.
+A web-based control platform built with **React Vite** (frontend) and **Flask** (backend) to interface with an LX200-compatible telescope system. Designed for deployment on a Raspberry Pi at the Observatório Astronómico da Universidade da Madeira.
 
 ---
 
-## 📦 Tech Stack
+## 📦 Installation
 
-- 🖥️ **Frontend**: React + Vite
-- 🧠 **Backend**: Python + Flask
-- 🔌 **Communication**: TCP socket (LX200 protocol)
-- 🧪 **Tested On**: Raspberry Pi, Windows PC
-
----
-
-## 🧭 Project Structure
-
-telescope-control-platform/
-├── client/ # React frontend
-├── server/ # Flask backend
-│ ├── server.py # Flask API server
-│ ├── telescope.py # Telescope command logic
-│ └── venv/ # Python virtual environment (excluded from Git)
-└── README.md
-
----
-
-## 🚀 Getting Started
-
-### ⚙️ 1. Clone the Repo
-
+### 1. Clone the repository
 ```bash
-git clone https://github.com/ikki-wiki/telescope-control-platform.git
-cd telescope-control-platform
+git clone https://github.com/yourusername/telescope-control-platform.git
+cd telescope-control-platform-main
+```
 
-🧠 2. Backend (Flask)
+---
 
-🔹 Setup Virtual Environment
+### 2. Backend (Server)
+
+#### Requirements
+- Python 3.9+  
+- INDI server running (with telescope driver, e.g., LX200 or Simulator)
+
+#### Setup
+```bash
 cd server
 python -m venv venv
+source venv/bin/activate   # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-🔹 Activate Environment
-PowerShell: .\venv\Scripts\Activate.ps1
-CMD: venv\Scripts\activate.bat
-
-🔹 Install Requirements
-pip install flask flask-cors
-pip freeze > requirements.txt
-
-🔹 Run the Server
+#### Run the server
+```bash
 python server.py
-Server runs on: http://localhost:7123
+```
 
-🌐 3. Frontend (React)
+The server will start on **http://localhost:7123**.
 
-🔹 Setup
-cd ../client
-npm install
+---
 
-🔹 Run Development Server
-npm run dev
-Opens on: http://localhost:5173 or similar (Vite default)
+### 3. Frontend (Client)
 
-| Method | Route              | Description                |
-| ------ | ------------------ | -------------------------- |
-| POST   | `/api/movement`    | Move telescope (RA/DEC)    |
-| POST   | `/api/alignment`   | Alignment mode             |
-| POST   | `/api/information` | Get current info (RA, DEC) |
-| POST   | `/api/setTime`     | Set date/time              |
-| POST   | `/api/coordinates` | Slew to specific coords    |
+#### Requirements
+- Node.js 18+  
+- npm or yarn
 
-💾 Deployment on Raspberry Pi
-Clone this repo onto your Pi.
-
-Set up Python virtual environment and install backend dependencies.
-
-Build the React frontend:
+#### Setup
+```bash
 cd client
-npm run build
+npm install
+```
 
-Serve the React build from Flask or using a web server like Nginx.
+#### Run the client
+```bash
+npm run dev
+```
 
-Use systemd or tmux to keep the backend running.
+The frontend will be available at **http://localhost:5173** (by default).
 
+---
+
+## ⚙️ Usage
+
+1. Start the **INDI server** and ensure your telescope driver (e.g., Meade LX200) is running.  
+2. Launch the **backend** (`server/server.py`).  
+3. Launch the **frontend** (`client` with `npm run dev`).  
+4. Open the client in your browser → interact with the telescope.  
+
+---
+
+## 🧪 Running with Telescope Simulator
+
+If you don’t have telescope hardware, you can test using the **INDI Telescope Simulator**.
+
+1. Install INDI if not already installed:
+   ```bash
+   sudo apt-get install indi-bin
+   ```
+2. Start the INDI server with the telescope simulator:
+   ```bash
+   indiserver -v indi_simulator_telescope
+   ```
+   By default, this runs on **localhost:7624**.
+3. Start the **backend**:
+   ```bash
+   cd server
+   source venv/bin/activate
+   python server.py
+   ```
+4. Start the **frontend**:
+   ```bash
+   cd client
+   npm run dev
+   ```
+5. Open **http://localhost:5173** in your browser → you can now test the UI with the telescope simulator.
+
+---
+
+## 📂 Project Structure
+```
+telescope-control-platform-main/
+│── client/        # React frontend (Vite)
+│── server/        # Flask backend + INDI controllers
+│── README.md      # This file
+```
+
+---
+
+## 🚀 Features
+- Slew to Coordinates  
+- Monitor Live Telescope Position
+- Adjust Slew Speed 
+- Sync Date and Time
+- Manual Telescope Control
+- Park the Telescope
