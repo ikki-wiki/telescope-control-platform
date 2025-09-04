@@ -1,7 +1,9 @@
 # 🛰️ Telescope Control Platform
 
-A web-based control platform built with **React Vite** (frontend) and **Flask** (backend) to interface with an LX200-compatible telescope system. Designed for deployment on a Raspberry Pi at the Observatório Astronómico da Universidade da Madeira.
-
+This project provides a **web-based platform** to control a telescope via the INDI protocol.  
+It consists of two parts:  
+- **Client** → React frontend built with Vite  
+- **Server** → Python backend with Flask, handling telescope commands
 ---
 
 ## 📦 Installation
@@ -112,4 +114,5 @@ telescope-control-platform-main/
 - Sync Date and Time
 - Manual Telescope Control
 - Park the Telescope
+
 
