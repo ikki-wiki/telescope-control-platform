@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Control from './pages/Control';
 import Settings from './pages/Settings';
+import Tutorial from './pages/Tutorial';
 
 function App() {
   const [activePage, setActivePage] = useState('Home');
@@ -13,6 +14,7 @@ function App() {
       case 'home': return <Home />;
       case 'control': return <Control />;
       case 'settings': return <Settings />;
+      case 'user guide': return <Tutorial />;
       default: return <Home />;
     }
   };
